@@ -116,7 +116,7 @@ export default function Header() {
           open ? 'visible opacity-100' : 'invisible opacity-0'
         }`}
       />
-      <div ref={headerRef} className="relative mx-auto max-w-[1180px]">
+      <div ref={headerRef} className="relative mx-auto max-w-[1180px] animate-enter-down [animation-delay:150ms]">
         <div
           className={`flex items-center justify-between rounded-[18px] border py-2 pl-4 pr-2 backdrop-blur-md transition-colors duration-500 ${ease} sm:pl-6 ${barTone} ${
             menuOpen ? 'max-lg:rounded-b-none' : ''
@@ -146,7 +146,7 @@ export default function Header() {
               <Link
                 key={link.href}
                 to={link.href}
-                className={`text-xs font-medium uppercase tracking-[0.12em] transition ${navText}`}
+                className={`link-grow pb-0.5 text-xs font-medium uppercase tracking-[0.12em] ${navText}`}
               >
                 {link.label}
               </Link>
@@ -212,11 +212,21 @@ export default function Header() {
                       to={routes.treatment(t.slug)}
                       onMouseEnter={() => setActiveTreatment(i)}
                       onFocus={() => setActiveTreatment(i)}
-                      className={`block py-[9px] text-[21px] uppercase text-ink transition ${
+                      className={`flex items-center gap-3 py-[9px] text-[21px] uppercase text-ink transition duration-500 ${ease} ${
                         activeTreatment === i ? 'font-medium' : ''
                       }`}
                     >
-                      {t.shortTitle}
+                      <span
+                        aria-hidden
+                        className={`text-xs text-accent transition duration-500 ${ease} ${
+                          activeTreatment === i ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
+                        }`}
+                      >
+                        ✦
+                      </span>
+                      <span className={`-ml-6 transition-transform duration-500 ${ease} ${activeTreatment === i ? 'translate-x-6' : ''}`}>
+                        {t.shortTitle}
+                      </span>
                     </Link>
                   </li>
                 ))}
@@ -263,8 +273,14 @@ export default function Header() {
           <div className="border-t border-stone px-[46px] pb-12 pt-8">
             <p className="text-[15px] text-muted">Treatments</p>
             <ul className="mt-6">
-              {treatmentCategories.map((t) => (
-                <li key={t.slug}>
+              {treatmentCategories.map((t, i) => (
+                <li
+                  key={t.slug}
+                  style={{ transitionDelay: menuOpen ? `${150 + i * 60}ms` : '0ms' }}
+                  className={`transition-[opacity,transform] duration-500 ${ease} ${
+                    menuOpen ? 'translate-x-0 opacity-100' : '-translate-x-3 opacity-0'
+                  }`}
+                >
                   <Link to={routes.treatment(t.slug)} className="block py-[9px] text-[22px] uppercase text-ink">
                     {t.shortTitle}
                   </Link>
