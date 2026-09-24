@@ -36,6 +36,9 @@
   .heading-lg em,
   .heading-md em {
     @apply font-serif font-normal italic tracking-normal;
+    /* Cormorant's x-height is much lower than Jakarta's: scale it up so both read the same size */
+    font-size: 1.15em;
+    line-height: 1;
   }
 
   .btn {

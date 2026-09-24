@@ -38,7 +38,7 @@ function Hero({ hero }: { hero: Page['hero'] }) {
   const photoRef = useParallax<HTMLDivElement>(0.3, 'top');
 
   return (
-    <section className="relative isolate flex min-h-[640px] items-center overflow-hidden bg-[#8C7462] lg:h-[700px]">
+    <section className="relative isolate flex min-h-[640px] items-center overflow-hidden bg-[#8C7462] lg:h-[clamp(700px,48.6vw,100svh)]">
       <div ref={photoRef} className="parallax absolute inset-0 -z-20">
         <img
           src={hero.image}

@@ -28,13 +28,13 @@ export default function Hero() {
   const photoRef = useParallax<HTMLDivElement>(0.3, 'top');
 
   return (
-    <section className="relative isolate flex min-h-[720px] flex-col overflow-hidden bg-[#8C7462] sm:min-h-[800px] lg:h-[860px]">
+    <section className="relative isolate flex min-h-[720px] flex-col overflow-hidden bg-[#8C7462] sm:min-h-[800px] lg:h-[clamp(860px,59.72vw,100svh)]">
       <div ref={photoRef} className="parallax absolute inset-0 -z-20">
         <img
           src={heroImage}
           alt="Client relaxing during a facial in a warm, softly lit treatment suite"
           fetchPriority="high"
-          className="decor-motion h-full w-full animate-kenburns object-cover object-[70%_center] lg:object-center"
+          className="decor-motion h-full w-full animate-kenburns object-cover object-[70%_center] lg:object-[center_30%]"
         />
       </div>
       {/* Warm tint for legibility, heavier on the left and bottom where the copy sits */}
@@ -44,7 +44,7 @@ export default function Hero() {
       <Sparkles items={sparkles} className="-z-10 hidden text-cream/80 sm:block" />
 
       <div className="container-site relative flex flex-1 flex-col justify-end pb-12 pt-32 sm:justify-center sm:pb-16 lg:pt-36">
-        <div className="max-w-[760px]">
+        <div className="max-w-[760px] lg:max-w-[860px]">
           <SectionLabel tone="light" delay={300} className="max-sm:[&>span:last-child]:hidden">
             Advanced cosmetology &amp; clinical skin care
           </SectionLabel>
@@ -56,10 +56,10 @@ export default function Hero() {
             experience, designed to bring back your skin&apos;s natural glow.
           </Reveal>
           <Reveal delay={1300} className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link to={routes.booking} className="btn-light">
+            <Link to={routes.booking} className="btn-light py-2.5 font-serif text-lg font-normal italic sm:text-xl">
               Book your skin consultation
             </Link>
-            <Link to="/#treatments" className="btn-ghost-light">
+            <Link to="/#treatments" className="btn-ghost-light py-2.5 font-serif text-lg font-normal italic sm:text-xl">
               Explore our treatments
             </Link>
           </Reveal>
@@ -97,7 +97,7 @@ export default function Hero() {
               <span className="decor-motion inline-block animate-twinkle text-[13px] text-stone" style={{ animationDelay: `${i * 1.2}s` }} aria-hidden>
                 ✦
               </span>
-              {h.value && <CountUp value={h.value} className="text-lg font-bold sm:text-[22px]" />}
+              {h.value && <CountUp value={h.value} className="font-serif text-xl sm:text-[24px]" />}
               <span>{h.label}</span>
             </li>
           ))}

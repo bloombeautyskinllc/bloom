@@ -6,6 +6,7 @@ import Logo from '../ui/Logo';
 import { navLinks, routes, site } from '../../data/site';
 import { treatmentCategories } from '../../data/treatments';
 import { findTreatmentPage } from '../../data/treatmentPages';
+import { setScrollLocked } from '../../lib/smoothScroll';
 
 function SocialLinks() {
   const linkClass = 'transition hover:text-ink';
@@ -70,8 +71,10 @@ export default function Header() {
   // Lock page scroll while the mobile menu is open
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
+    setScrollLocked(menuOpen);
     return () => {
       document.body.style.overflow = '';
+      setScrollLocked(false);
     };
   }, [menuOpen]);
 
@@ -129,7 +132,7 @@ export default function Header() {
           <nav aria-label="Main" className="hidden items-center gap-[35px] lg:flex">
             <button
               type="button"
-              className={`-my-5 flex items-center gap-1.5 py-5 text-xs font-medium uppercase tracking-[0.12em] underline-offset-4 transition ${navText} ${
+              className={`-my-5 flex items-center gap-1.5 py-5 text-[13px] font-normal uppercase tracking-[0.03em] underline-offset-4 transition ${navText} ${
                 dropdownOpen ? 'underline' : ''
               }`}
               aria-expanded={dropdownOpen}
@@ -146,7 +149,7 @@ export default function Header() {
               <Link
                 key={link.href}
                 to={link.href}
-                className={`link-grow pb-0.5 text-xs font-medium uppercase tracking-[0.12em] ${navText}`}
+                className={`link-grow pb-0.5 text-[13px] font-normal uppercase tracking-[0.03em] ${navText}`}
               >
                 {link.label}
               </Link>
@@ -156,7 +159,7 @@ export default function Header() {
           <div className="flex items-center gap-2">
             <Link
               to={routes.booking}
-              className={`${open ? 'btn-dark' : 'btn-light'} px-5 py-2.5 text-sm font-semibold sm:px-[26px] sm:py-3 sm:text-base ${
+              className={`${open ? 'btn-dark' : 'btn-light'} px-5 py-2 font-serif text-lg font-normal italic sm:px-[26px] sm:py-2.5 sm:text-xl ${
                 menuOpen ? 'max-lg:hidden' : ''
               }`}
             >
@@ -266,6 +269,7 @@ export default function Header() {
         {/* Mobile menu */}
         <div
           id="mobile-menu"
+          data-lenis-prevent
           className={`absolute inset-x-0 top-full max-h-[calc(100dvh-96px)] overflow-y-auto rounded-b-[18px] border border-t-0 border-stone bg-cream shadow-soft transition-[opacity,transform,visibility] duration-500 ${ease} lg:hidden ${
             menuOpen ? 'visible translate-y-0 opacity-100' : 'pointer-events-none invisible -translate-y-1.5 opacity-0'
           }`}
