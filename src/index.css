@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 96px;
+  }
+
+  body {
+    @apply bg-cream font-sans text-ink antialiased;
+  }
+
+  ::selection {
+    @apply bg-accent text-cream;
+  }
+}
+
+@layer components {
+  .container-site {
+    @apply mx-auto w-full max-w-site px-5 sm:px-8 lg:px-10;
+  }
+
+  /* Section headline: sans with an italic serif accent (<em>) */
+  .heading-xl {
+    @apply font-sans text-[34px] font-medium leading-[1.08] tracking-[-0.03em] sm:text-5xl lg:text-[64px];
+  }
+  .heading-lg {
+    @apply font-sans text-[32px] font-medium leading-[1.1] tracking-[-0.03em] sm:text-[40px] lg:text-[48px];
+  }
+  .heading-md {
+    @apply font-sans text-[30px] font-medium leading-[1.1] tracking-[-0.03em] sm:text-[36px];
+  }
+  .heading-xl em,
+  .heading-lg em,
+  .heading-md em {
+    @apply font-serif font-normal italic tracking-normal;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 text-[15px] font-medium transition duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 sm:text-base;
+  }
+  .btn-light {
+    @apply btn bg-cream text-ink hover:bg-white focus-visible:outline-cream;
+  }
+  .btn-ghost-light {
+    @apply btn border border-cream/60 text-cream hover:bg-cream/10 focus-visible:outline-cream;
+  }
+  .btn-dark {
+    @apply btn border border-stone/60 bg-cocoa text-white hover:bg-ink focus-visible:outline-cocoa;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
