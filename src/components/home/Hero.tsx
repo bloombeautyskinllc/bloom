@@ -7,7 +7,10 @@ import GlowOrb from '../decor/GlowOrb';
 import Sparkles from '../decor/Sparkles';
 import RotatingBadge from '../decor/RotatingBadge';
 import { useParallax } from '../../hooks/useParallax';
-import heroImage from '../../assets/images/hero.webp';
+import heroMobile from '../../assets/images/hero.webp';
+import hero1280 from '../../assets/images/heroes/home-1280.webp';
+import hero1920 from '../../assets/images/heroes/home-1920.webp';
+import hero2160 from '../../assets/images/heroes/home-2160.webp';
 import { routes, site } from '../../data/site';
 
 const highlights = [
@@ -30,12 +33,16 @@ export default function Hero() {
   return (
     <section className="relative isolate flex min-h-[720px] flex-col overflow-hidden bg-[#8C7462] sm:min-h-[800px] lg:h-[clamp(860px,59.72vw,100svh)]">
       <div ref={photoRef} className="parallax absolute inset-0 -z-20">
-        <img
-          src={heroImage}
-          alt="Client relaxing during a facial in a warm, softly lit treatment suite"
-          fetchPriority="high"
-          className="decor-motion h-full w-full animate-kenburns object-cover object-[70%_center] lg:object-[center_30%]"
-        />
+        {/* High-res photo from tablet up; phones keep the original lighter file */}
+        <picture className="block h-full w-full">
+          <source media="(min-width: 768px)" srcSet={`${hero1280} 1280w, ${hero1920} 1920w, ${hero2160} 2160w`} sizes="100vw" />
+          <img
+            src={heroMobile}
+            alt="Client relaxing during a facial in a warm, softly lit treatment suite"
+            fetchPriority="high"
+            className="decor-motion h-full w-full animate-kenburns object-cover object-[70%_center] lg:object-[center_30%]"
+          />
+        </picture>
       </div>
       {/* Warm tint for legibility, heavier on the left and bottom where the copy sits */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#A48A73]/40 via-[#8C7462]/50 to-[#5F4C3C]/80 lg:bg-gradient-to-r lg:from-[#5F4C3C]/75 lg:via-[#8C7462]/35 lg:to-transparent" />

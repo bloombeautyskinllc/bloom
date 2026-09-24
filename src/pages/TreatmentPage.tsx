@@ -40,12 +40,18 @@ function Hero({ hero }: { hero: Page['hero'] }) {
   return (
     <section className="relative isolate flex min-h-[640px] items-center overflow-hidden bg-[#8C7462] lg:h-[clamp(700px,48.6vw,100svh)]">
       <div ref={photoRef} className="parallax absolute inset-0 -z-20">
-        <img
-          src={hero.image}
-          alt={hero.imageAlt}
-          fetchPriority="high"
-          className={`decor-motion h-full w-full animate-kenburns object-cover ${hero.imagePosition ?? 'object-[center_60%]'}`}
-        />
+        {/* Landscape photo from tablet up; phones keep the portrait crop */}
+        <picture className="block h-full w-full">
+          {hero.imageWide && <source media="(min-width: 768px)" srcSet={hero.imageWide} sizes="100vw" />}
+          <img
+            src={hero.image}
+            alt={hero.imageAlt}
+            fetchPriority="high"
+            className={`decor-motion h-full w-full animate-kenburns object-cover ${hero.imagePosition ?? 'object-[center_60%]'} ${
+              hero.imageWide ? 'md:object-center' : ''
+            }`}
+          />
+        </picture>
       </div>
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-ink/45 via-[#5F4C3C]/35 to-ink/45" />
       <GlowOrb className="left-[calc(50%-350px)] top-[10%] h-[700px] w-[700px] mix-blend-soft-light" color="rgba(250, 238, 222, 0.85)" />

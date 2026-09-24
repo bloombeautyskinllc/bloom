@@ -18,15 +18,27 @@ import {
 } from 'react-icons/pi';
 import { BrowLipsIcon } from '../components/ui/icons';
 import facialsHero from '../assets/images/treatment-facials.webp';
+import facialsHero1280 from '../assets/images/heroes/facials-1280.webp';
+import facialsHero1920 from '../assets/images/heroes/facials-1920.webp';
+import facialsHero2160 from '../assets/images/heroes/facials-2160.webp';
 import facialsMenu from '../assets/images/treatments/facials-menu.webp';
 import facialsExperience from '../assets/images/treatments/facials-experience.webp';
 import browsHero from '../assets/images/treatment-brows.webp';
+import browsHero1280 from '../assets/images/heroes/brows-1280.webp';
+import browsHero1920 from '../assets/images/heroes/brows-1920.webp';
+import browsHero2160 from '../assets/images/heroes/brows-2160.webp';
 import browsMenu from '../assets/images/treatments/brows-menu.webp';
 import browsExperience from '../assets/images/treatments/brows-experience.webp';
 import laserHero from '../assets/images/treatment-laser.webp';
+import laserHero1280 from '../assets/images/heroes/laser-1280.webp';
+import laserHero1920 from '../assets/images/heroes/laser-1920.webp';
+import laserHero2160 from '../assets/images/heroes/laser-2160.webp';
 import laserMenu from '../assets/images/treatments/laser-menu.webp';
 import laserExperience from '../assets/images/treatments/laser-experience.webp';
 import intimateHero from '../assets/images/treatment-intimate.webp';
+import intimateHero1280 from '../assets/images/heroes/intimate-1280.webp';
+import intimateHero1920 from '../assets/images/heroes/intimate-1920.webp';
+import intimateHero2160 from '../assets/images/heroes/intimate-2160.webp';
 import intimateMenu from '../assets/images/treatments/intimate-menu.webp';
 import intimateExperience from '../assets/images/treatments/intimate-experience.webp';
 
@@ -47,6 +59,8 @@ export type TreatmentPage = {
     title: SplitHeading;
     subtitle: string;
     image: string;
+    /** Landscape version for tablet/desktop, as a srcset; mobile keeps the portrait `image` */
+    imageWide?: string;
     imageAlt: string;
     /** Tailwind object-position class to frame the photo, e.g. 'object-[center_40%]' */
     imagePosition?: string;
@@ -71,6 +85,7 @@ export const treatmentPages: TreatmentPage[] = [
       title: { lead: 'Facials &', accent: 'Skin Care' },
       subtitle: 'Clinical protocols designed to restore, renew and bring back your skin’s natural glow.',
       image: facialsHero,
+      imageWide: `${facialsHero1280} 1280w, ${facialsHero1920} 1920w, ${facialsHero2160} 2160w`,
       imageAlt: 'Client relaxing during a facial massage in a softly lit treatment suite',
     },
     why: {
@@ -146,6 +161,7 @@ export const treatmentPages: TreatmentPage[] = [
       title: { lead: 'Brows &', accent: 'Lips' },
       subtitle: 'High-precision micropigmentation and lamination that enhance your natural features.',
       image: browsHero,
+      imageWide: `${browsHero1280} 1280w, ${browsHero1920} 1920w, ${browsHero2160} 2160w`,
       imageAlt: 'Portrait of a woman with defined brows and soft, natural lip color',
       imagePosition: 'object-[center_38%]',
     },
@@ -238,6 +254,7 @@ export const treatmentPages: TreatmentPage[] = [
       title: { lead: 'Diode Laser', accent: 'Hair Removal' },
       subtitle: 'Fast, comfortable sessions for smooth skin you don’t have to think about.',
       image: laserHero,
+      imageWide: `${laserHero1280} 1280w, ${laserHero1920} 1920w, ${laserHero2160} 2160w`,
       imageAlt: 'Specialist performing a diode laser session on a client’s leg',
       imagePosition: 'object-[center_45%]',
     },
@@ -320,6 +337,7 @@ export const treatmentPages: TreatmentPage[] = [
       title: { lead: 'Intimate', accent: 'Skin Care' },
       subtitle: 'Gentle, discreet protocols that brighten, renew and restore comfort to delicate areas.',
       image: intimateHero,
+      imageWide: `${intimateHero1280} 1280w, ${intimateHero1920} 1920w, ${intimateHero2160} 2160w`,
       imageAlt: 'Woman with glowing skin gently touching her face and shoulder',
       imagePosition: 'object-[center_30%]',
     },
