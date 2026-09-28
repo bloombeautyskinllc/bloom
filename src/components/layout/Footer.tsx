@@ -58,7 +58,7 @@ export default function Footer({ showCta = true }: { showCta?: boolean }) {
       <div className="absolute inset-x-0 top-0 -z-10 h-[760px] bg-gradient-to-b from-ink/30 via-ink/40 to-ink sm:h-[820px]" />
 
       {showCta && (
-        <div className="container-site relative flex flex-col items-center pb-20 pt-24 text-center sm:pb-28 sm:pt-40">
+        <div id="consultation" className="container-site relative flex flex-col items-center pb-20 pt-24 text-center sm:pb-28 sm:pt-40">
           <Sparkles
             className="text-cream/70"
             items={[
@@ -75,8 +75,10 @@ export default function Footer({ showCta = true }: { showCta?: boolean }) {
             Book your skin consultation and leave with a clear, personalized plan for your skin.
           </Reveal>
           <Reveal delay={650} className="mt-9">
-            <Link
-              to={routes.booking}
+            <a
+              href={site.whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
               className="sheen group relative isolate inline-flex items-center gap-3 overflow-hidden rounded-full bg-cream py-1.5 pl-1.5 pr-6 text-ink shadow-soft transition duration-500 [--sheen:rgba(131,104,85,0.22)] hover:-translate-y-0.5 hover:bg-white"
             >
               <span className="relative grid h-9 w-9 place-items-center rounded-full bg-ink transition group-hover:scale-105">
@@ -84,7 +86,7 @@ export default function Footer({ showCta = true }: { showCta?: boolean }) {
                 <img src={logoMark} alt="" aria-hidden className="relative h-5 w-auto" />
               </span>
               <span className="font-serif text-xl italic">Book your skin consultation</span>
-            </Link>
+            </a>
           </Reveal>
         </div>
       )}

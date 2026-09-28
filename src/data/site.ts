@@ -32,7 +32,7 @@ export const routes = {
 } as const;
 
 export const navLinks = [
-  { label: 'The method', href: '/#method' },
   { label: 'About', href: '/#about' },
-  { label: 'Skin consultation', href: routes.booking },
+  { label: 'The method', href: '/#method' },
+  { label: 'Skin consultation', href: '/#consultation' },
 ] as const;
