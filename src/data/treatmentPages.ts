@@ -369,9 +369,14 @@ export const treatmentPages: TreatmentPage[] = [
               description: 'Deep cleansing for the bikini area: exfoliation, ingrown-hair care and soothing hydration.',
             },
             {
-              name: 'Intimate Peeling',
-              price: '$240',
-              description: 'A gentle peel that brightens and evens out tone in delicate areas.',
+              name: 'Underarm Depigmentation',
+              price: '$1,100',
+              description: 'A progressive protocol that lightens dark underarms and evens out skin tone.',
+            },
+            {
+              name: 'Intimate Area Depigmentation',
+              price: '$1,250',
+              description: 'Gentle, progressive lightening that restores an even tone to delicate areas.',
             },
           ],
         },
