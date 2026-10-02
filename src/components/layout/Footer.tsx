@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { FaFacebook, FaInstagram, FaTiktok } from 'react-icons/fa';
 import Logo from '../ui/Logo';
 import Reveal from '../motion/Reveal';
@@ -52,7 +52,7 @@ export default function Footer({ showCta = true }: { showCta?: boolean }) {
     <footer className="relative isolate overflow-hidden bg-ink">
       <div className="absolute inset-x-0 top-0 -z-10 h-[760px] overflow-hidden sm:h-[820px]">
         <div ref={photoRef} className="parallax absolute inset-x-0 -inset-y-[12%]">
-          <img src={ctaSuite} alt="" aria-hidden loading="lazy" className="h-full w-full object-cover" />
+          <img src={ctaSuite.src} alt="" aria-hidden loading="lazy" className="h-full w-full object-cover" />
         </div>
       </div>
       <div className="absolute inset-x-0 top-0 -z-10 h-[760px] bg-gradient-to-b from-ink/30 via-ink/40 to-ink sm:h-[820px]" />
@@ -83,7 +83,7 @@ export default function Footer({ showCta = true }: { showCta?: boolean }) {
             >
               <span className="relative grid h-9 w-9 place-items-center rounded-full bg-ink transition group-hover:scale-105">
                 <span aria-hidden className="decor-motion absolute inset-0 animate-pulse-ring rounded-full bg-ink" />
-                <img src={logoMark} alt="" aria-hidden className="relative h-5 w-auto" />
+                <img src={logoMark.src} alt="" aria-hidden className="relative h-5 w-auto" />
               </span>
               <span className="font-serif text-xl italic">Book your skin consultation</span>
             </a>
@@ -95,7 +95,7 @@ export default function Footer({ showCta = true }: { showCta?: boolean }) {
         <Reveal variant="up" duration={1300} className="overflow-hidden rounded-t-[22px] bg-stone px-6 pt-10 sm:px-10 sm:pt-12">
           <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-[1.4fr_1fr_1.1fr_1.1fr_1.4fr]">
             <Reveal delay={200} className="col-span-2 lg:col-span-1">
-              <Link to={routes.home} aria-label="BLOOM Beauty Skin — home">
+              <Link href={routes.home} aria-label="BLOOM Beauty Skin — home">
                 <Logo tone="dark" />
               </Link>
               <ul className="mt-8 space-y-2 text-[15px] text-bronze">
@@ -107,7 +107,7 @@ export default function Footer({ showCta = true }: { showCta?: boolean }) {
             <FooterColumn title="Quick links" delay={300}>
               {quickLinks.map((l) => (
                 <li key={l.label}>
-                  <Link to={l.href} className={linkClass}>
+                  <Link href={l.href} className={linkClass}>
                     {l.label}
                   </Link>
                 </li>
@@ -117,7 +117,7 @@ export default function Footer({ showCta = true }: { showCta?: boolean }) {
             <FooterColumn title="Treatments" delay={400}>
               {treatmentCategories.map((t) => (
                 <li key={t.slug}>
-                  <Link to={routes.treatment(t.slug)} className={linkClass}>
+                  <Link href={routes.treatment(t.slug)} className={linkClass}>
                     {t.shortTitle}
                   </Link>
                 </li>
@@ -127,7 +127,7 @@ export default function Footer({ showCta = true }: { showCta?: boolean }) {
             <FooterColumn title="Legal" delay={500}>
               {legalLinks.map((l) => (
                 <li key={l.label}>
-                  <Link to={l.href} className={linkClass}>
+                  <Link href={l.href} className={linkClass}>
                     {l.label}
                   </Link>
                 </li>

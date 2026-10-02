@@ -1,3 +1,5 @@
+'use client';
+
 import Hero from '../components/home/Hero';
 import Treatments from '../components/home/Treatments';
 import About from '../components/home/About';

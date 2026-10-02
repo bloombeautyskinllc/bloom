@@ -1,4 +1,6 @@
-import { Link } from 'react-router-dom';
+'use client';
+
+import Link from 'next/link';
 import SectionLabel from '../components/ui/SectionLabel';
 import Flower from '../components/ui/Flower';
 import Reveal from '../components/motion/Reveal';
@@ -39,7 +41,7 @@ export default function ComingSoon({ title }: { title: string }) {
           <a href={site.whatsappUrl} target="_blank" rel="noreferrer" className="btn-dark">
             Message us on WhatsApp
           </a>
-          <Link to={routes.home} className="btn border border-bronze/40 text-ink [--sheen:rgba(131,104,85,0.2)] hover:bg-white/50">
+          <Link href={routes.home} className="btn border border-bronze/40 text-ink [--sheen:rgba(131,104,85,0.2)] hover:bg-white/50">
             Back to home
           </Link>
         </Reveal>

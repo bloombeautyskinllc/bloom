@@ -1,0 +1,340 @@
+{
+  "login": {
+    "label": "Step 1 of 2",
+    "titleLead": "Sign in to",
+    "titleAccent": "book your visit.",
+    "body": "Use your Google account to book, reschedule or cancel appointments and keep your treatment history in one place.",
+    "google": "Continue with Google",
+    "privacy": "We only use your name and email to manage your appointments. By continuing you agree to our <terms>Terms of service</terms> and <privacy>Privacy policy</privacy>.",
+    "errors": {
+      "auth": "We couldn’t sign you in. Please try again.",
+      "oauth": "Google sign-in is not available right now. Please try again in a moment.",
+      "access_denied": "Sign-in was cancelled."
+    }
+  },
+  "onboarding": {
+    "label": "Step 2 of 2",
+    "titleLead": "Complete your",
+    "titleAccent": "profile.",
+    "body": "We use these details to confirm your appointments and reach you if anything changes.",
+    "fullName": "Full name",
+    "phone": "Mobile phone",
+    "country": "Country code",
+    "phoneHint": "We’ll only use it for your appointments.",
+    "terms": "I accept the <terms>Terms of service</terms> and the <policy>Cancellation policy</policy>.",
+    "reminders": "Send me appointment reminders.",
+    "submit": "Continue",
+    "submitting": "Saving…",
+    "errors": {
+      "fullName": "Please enter your full name.",
+      "phone": "Please enter a valid mobile number.",
+      "terms": "You need to accept the terms to continue.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "dashboard": {
+    "metaTitle": "My appointments | BLOOM Beauty Skin",
+    "label": "My account",
+    "greetingLead": "Hello,",
+    "upcoming": "Upcoming appointments",
+    "noUpcoming": "You have no upcoming appointments yet.",
+    "book": "Book an appointment",
+    "profile": "Profile",
+    "email": "Email",
+    "phone": "Phone",
+    "reminders": "Reminders",
+    "remindersOn": "On",
+    "remindersOff": "Off",
+    "signOut": "Sign out",
+    "booked": "You’re booked! Your appointment {code} is confirmed.",
+    "history": "History",
+    "noHistory": "Your past appointments will appear here.",
+    "status": {
+      "held": "Reserved",
+      "pending_payment": "Awaiting payment",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "no_show": "Missed",
+      "expired": "Expired"
+    },
+    "payment": {
+      "unpaid": "Pay at the studio",
+      "pending": "Payment pending",
+      "paid": "Paid",
+      "partially_paid": "Partially paid",
+      "refunded": "Refunded",
+      "failed": "Payment failed"
+    },
+    "actions": {
+      "reschedule": "Reschedule",
+      "cancel": "Cancel",
+      "addToGoogle": "Add to Google Calendar",
+      "downloadIcs": "Download .ics",
+      "contact": "Contact us on WhatsApp"
+    },
+    "policyClosed": "Changes are no longer possible online for this appointment.",
+    "reschedulesLeft": "{count, plural, =0 {No reschedules left} one {# reschedule left} other {# reschedules left}}",
+    "cancelDialog": {
+      "title": "Cancel this appointment?",
+      "body": "{treatment} on {date} at {time}.",
+      "refund": "You’ll receive a {percent}% refund of the amount paid.",
+      "reason": "Reason (optional)",
+      "confirm": "Yes, cancel it",
+      "keep": "Keep my appointment",
+      "cancelling": "Cancelling…",
+      "done": "Your appointment was cancelled."
+    },
+    "rescheduleDialog": {
+      "title": "Choose a new time",
+      "current": "Currently: {date} at {time}",
+      "confirm": "Move my appointment",
+      "moving": "Moving…",
+      "done": "Your appointment was moved."
+    },
+    "editProfile": "Edit profile",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "saved": "Saved.",
+    "cancelEdit": "Cancel",
+    "deleteAccount": {
+      "title": "Delete account",
+      "body": "We’ll cancel your upcoming appointments and remove your personal details. Your appointment history is kept without your name for our records.",
+      "button": "Delete my account",
+      "confirm": "Yes, delete my account",
+      "keep": "Keep my account",
+      "deleting": "Deleting…"
+    }
+  },
+  "email": {
+    "welcome": {
+      "subject": "Welcome to BLOOM Beauty Skin",
+      "preview": "Your account is ready. Book, reschedule or cancel online anytime.",
+      "heading": "Welcome to BLOOM, {name}.",
+      "body": "Your account is ready. From now on you can book, reschedule or cancel your appointments online and keep your treatment history in one place.",
+      "cta": "Book your appointment",
+      "signoff": "See you soon,",
+      "team": "The BLOOM Beauty Skin team",
+      "footer": "You’re receiving this email because you created an account at BLOOM Beauty Skin."
+    },
+    "details": {
+      "treatment": "Treatment",
+      "when": "Date & time",
+      "duration": "Duration",
+      "total": "Price",
+      "reference": "Reference",
+      "where": "Where",
+      "notes": "Your notes",
+      "startingPrice": "Starting price. Your final price is confirmed at your consultation."
+    },
+    "manage": "Manage your appointment",
+    "addToCalendar": "The attached invitation adds it to your calendar.",
+    "footer": "You’re receiving this email because you have an appointment with BLOOM Beauty Skin.",
+    "booking": {
+      "confirmed": {
+        "subject": "Your appointment is confirmed · {date}",
+        "preview": "See you {date} at {time}.",
+        "heading": "You’re booked, {name}.",
+        "intro": "We’re looking forward to seeing you. Here are your appointment details."
+      },
+      "rescheduled": {
+        "subject": "Your appointment has been moved · {date}",
+        "preview": "Your new time is {date} at {time}.",
+        "heading": "New time confirmed, {name}.",
+        "intro": "Your appointment has been rescheduled. Here are the updated details."
+      },
+      "cancelled_client": {
+        "subject": "Your appointment has been cancelled",
+        "preview": "Your appointment on {date} was cancelled.",
+        "heading": "Appointment cancelled.",
+        "intro": "As requested, we’ve cancelled your appointment. We hope to see you again soon."
+      },
+      "cancelled_business": {
+        "subject": "We had to cancel your appointment",
+        "preview": "Your appointment on {date} was cancelled.",
+        "heading": "We’re sorry, {name}.",
+        "intro": "We had to cancel your appointment. We’ll contact you to find a new time, or you can book again online whenever it suits you."
+      },
+      "reminder": {
+        "subject": "Reminder: your appointment {when}",
+        "preview": "See you {when}.",
+        "heading": "See you {when}, {name}.",
+        "intro": "This is a friendly reminder of your upcoming appointment. Please arrive a few minutes early."
+      },
+      "bookAgain": "Book again"
+    },
+    "review": {
+      "subject": "How was your visit?",
+      "preview": "Tell us about your {treatment}.",
+      "heading": "Thank you for visiting, {name}.",
+      "intro": "We’d love to hear how your {treatment} went. Your review helps others discover BLOOM.",
+      "cta": "Leave a review"
+    },
+    "admin": {
+      "new": {
+        "subject": "New booking · {client} · {date}",
+        "heading": "New booking"
+      },
+      "rescheduled": {
+        "subject": "Rescheduled · {client} · {date}",
+        "heading": "Booking rescheduled"
+      },
+      "cancelled": {
+        "subject": "Cancelled · {client} · {date}",
+        "heading": "Booking cancelled"
+      },
+      "cancelledBy": "Cancelled by {by}",
+      "client": "Client",
+      "phone": "Phone",
+      "email": "Email",
+      "payment": "Payment",
+      "reason": "Reason",
+      "cta": "Open in the back office",
+      "footer": "Staff notification from the BLOOM booking system.",
+      "syncError": {
+        "subject": "Action needed: {what} failed",
+        "heading": "Something needs your attention",
+        "intro": "A background task kept failing after several retries.",
+        "task": "Task",
+        "error": "Last error",
+        "cta": "Open the back office"
+      },
+      "notes": "Client notes",
+      "paymentStatus": {
+        "unpaid": "Not paid online (pay at the studio)",
+        "pending": "Payment pending",
+        "paid": "Paid",
+        "partially_paid": "Partially paid",
+        "refunded": "Refunded",
+        "failed": "Payment failed"
+      }
+    }
+  },
+  "authModal": {
+    "close": "Close",
+    "notYou": "Not you? <link>Use another account</link>",
+    "redirecting": "Opening Google…"
+  },
+  "booking": {
+    "metaTitle": "Book an appointment | BLOOM Beauty Skin",
+    "label": "Online booking",
+    "titleLead": "Book your",
+    "titleAccent": "appointment.",
+    "steps": {
+      "category": "Category",
+      "treatment": "Treatment",
+      "options": "Customize",
+      "datetime": "Date & time",
+      "confirm": "Confirm"
+    },
+    "stepOf": "Step {current} of {total}",
+    "back": "Back",
+    "continue": "Continue",
+    "category": {
+      "title": "What would you like to book?",
+      "treatments": "{count, plural, one {# treatment} other {# treatments}}"
+    },
+    "treatment": {
+      "title": "Choose your treatment",
+      "bestSeller": "Best seller",
+      "includes": "What’s included",
+      "select": "Select"
+    },
+    "options": {
+      "title": "Customize your session",
+      "hintMin": "Choose at least {min, plural, one {# option} other {# options}}.",
+      "hintRange": "Choose between {min} and {max}.",
+      "selected": "{count, plural, =0 {Nothing selected} one {# selected} other {# selected}}",
+      "addMinutes": "+{minutes} min"
+    },
+    "datetime": {
+      "title": "Pick a date and time",
+      "timezone": "Times are shown in New York time (ET).",
+      "noSlots": "No times left on this day. Please choose another date.",
+      "noSlotsMonth": "No availability this month. Try the next one.",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "loading": "Loading available times…",
+      "holding": "Reserving your time…",
+      "unavailable": "We couldn’t load availability. Please try again.",
+      "retry": "Try again",
+      "available": "available",
+      "selectedDay": "selected"
+    },
+    "confirm": {
+      "title": "Review and confirm",
+      "holdNotice": "We’re holding this time for you for {time}.",
+      "holdExpired": "Your reserved time has expired. Please pick a time again.",
+      "notes": "Notes for your specialist (optional)",
+      "notesHint": "Anything we should know before your visit: allergies, goals, questions.",
+      "policyTitle": "Cancellation policy",
+      "policy": "Free to reschedule up to {hours} hours before (up to {max} times). Cancel at least {hours} hours before for a {percent}% refund; later cancellations and missed appointments are non-refundable.",
+      "policyNoPayment": "You can reschedule or cancel from your account up to {hours} hours before your appointment.",
+      "readTerms": "Read the full policy",
+      "submit": "Confirm booking",
+      "submitting": "Confirming…",
+      "intakeTitle": "Before your visit",
+      "required": "Required",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "summary": {
+      "title": "Your booking",
+      "empty": "Choose a treatment to see your summary.",
+      "duration": "Duration",
+      "total": "Total",
+      "estimate": "Starting price. Your final price is confirmed at your consultation.",
+      "date": "Date",
+      "time": "Time",
+      "with": "Specialist"
+    },
+    "errors": {
+      "not_authenticated": "Please sign in again to continue.",
+      "onboarding_required": "Please complete your profile first.",
+      "not_bookable": "This treatment can’t be booked online right now.",
+      "invalid_options": "Please review your selection.",
+      "too_soon": "That time is too soon to book online. Please choose a later time.",
+      "too_far": "That date is too far ahead. Please choose an earlier date.",
+      "invalid_time": "Please choose one of the available times.",
+      "slot_taken": "Someone just booked that time. Please choose another one.",
+      "not_found": "We couldn’t find this booking.",
+      "not_held": "This time is no longer reserved. Please pick a time again.",
+      "hold_expired": "Your reserved time has expired. Please pick a time again.",
+      "intake_required": "Please answer the questions before confirming.",
+      "not_cancellable": "This booking can no longer be cancelled.",
+      "not_reschedulable": "This booking can no longer be rescheduled.",
+      "outside_policy": "It’s too close to your appointment to change it online. Please contact us and we’ll do our best to help.",
+      "max_reschedules": "This booking has reached the maximum number of reschedules. Please contact us to change it.",
+      "invalid_request": "Something doesn’t look right. Please try again.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "calendar": {
+    "client": {
+      "title": "Google Calendar",
+      "body": "Connect your Google Calendar and your BLOOM appointments will appear there automatically, and stay up to date when they change.",
+      "connected": "Connected as {email}. Your appointments are added automatically.",
+      "connect": "Connect Google Calendar",
+      "disconnect": "Disconnect",
+      "without": "Not connected: we’ll email you calendar invitations instead."
+    },
+    "business": {
+      "title": "Business calendar",
+      "body": "Connect the business Google Calendar: every booking is added to it, and anything you block there (a day off, a personal appointment) is no longer offered online.",
+      "connected": "Connected as {email}.",
+      "connect": "Connect Google Calendar",
+      "disconnect": "Disconnect",
+      "lastError": "Last problem: {error}"
+    },
+    "status": {
+      "connected": "Google Calendar connected.",
+      "disconnected": "Google Calendar disconnected.",
+      "cancelled": "Connection cancelled.",
+      "missing_permission": "Please allow calendar access to connect it.",
+      "error": "We couldn’t connect Google Calendar. Please try again."
+    }
+  }
+}

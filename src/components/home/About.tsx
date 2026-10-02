@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import SectionLabel from '../ui/SectionLabel';
 import Reveal from '../motion/Reveal';
 import SplitText from '../motion/SplitText';
@@ -55,7 +55,7 @@ export default function About() {
               needs and nothing it doesn&apos;t.
             </Reveal>
             <Reveal delay={650} className="mt-7">
-              <Link to="/#method" className="btn-dark">
+              <Link href="/#method" className="btn-dark">
                 Discover our method
               </Link>
             </Reveal>
@@ -73,7 +73,7 @@ export default function About() {
 
           <div className="relative">
             <ParallaxImage
-              src={aboutSuite}
+              src={aboutSuite.src}
               alt="BLOOM's cosmetologist seated in the private treatment suite"
               delay={200}
               className="aspect-[4/3] w-full rounded-[22px] lg:aspect-auto lg:h-[470px]"

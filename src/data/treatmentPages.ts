@@ -47,7 +47,15 @@ export type SplitHeading = { lead: string; accent: string };
 
 export type Feature = { icon: IconType; title: string; body: string };
 
-export type MenuItem = { name: string; price: string; description?: string; bestSeller?: boolean };
+/** A row of a treatment page's price menu, built from the catalog (src/lib/catalog/menu.ts) */
+export type MenuItem = {
+  name: string;
+  price: string;
+  description?: string;
+  bestSeller?: boolean;
+  /** Catalog slugs that preselect the booking flow; laser areas are options of one session */
+  book?: { treatment: string; option?: string };
+};
 
 /** A block of the price menu, optionally titled (e.g. "Brows", "Lips") */
 export type MenuGroup = { label?: string; items: MenuItem[] };
@@ -66,7 +74,8 @@ export type TreatmentPage = {
     imagePosition?: string;
   };
   why: { heading: SplitHeading; body: string; points: Feature[] };
-  menu: { heading: SplitHeading; groups: MenuGroup[]; note: string; image: string; imageAlt: string };
+  /** The rows come from the catalog (admin > Catalog); only the copy and photo live here */
+  menu: { heading: SplitHeading; note: string; image: string; imageAlt: string };
   benefits: string[];
   experience: {
     heading: SplitHeading;
@@ -84,8 +93,8 @@ export const treatmentPages: TreatmentPage[] = [
     hero: {
       title: { lead: 'Facials &', accent: 'Skin Care' },
       subtitle: 'Clinical protocols designed to restore, renew and bring back your skin’s natural glow.',
-      image: facialsHero,
-      imageWide: `${facialsHero1280} 1280w, ${facialsHero1920} 1920w, ${facialsHero2160} 2160w`,
+      image: facialsHero.src,
+      imageWide: `${facialsHero1280.src} 1280w, ${facialsHero1920.src} 1920w, ${facialsHero2160.src} 2160w`,
       imageAlt: 'Client relaxing during a facial massage in a softly lit treatment suite',
     },
     why: {
@@ -106,34 +115,15 @@ export const treatmentPages: TreatmentPage[] = [
     },
     menu: {
       heading: { lead: 'Our facial &', accent: 'skin care menu' },
-      groups: [
-        {
-          items: [
-            { name: 'Microneedling', price: '$250', bestSeller: true },
-            { name: 'Face Peeling (Mesopeel)', price: '$240' },
-            { name: 'Hydrodermabrasion Treatment', price: '$180', bestSeller: true },
-            { name: 'Hydrating Facial', price: '$180' },
-            { name: 'Back Facial', price: '$180' },
-            { name: 'Dermaplaning Treatment', price: '$175', bestSeller: true },
-            { name: 'Autumn Glow Facial', price: '$175' },
-            { name: 'Oxygen Infusion Facial', price: '$170' },
-            { name: 'Pumpkin Peel Facial (Vitamin A)', price: '$160' },
-            { name: 'Vitamin C Facial', price: '$150' },
-            { name: 'Microdermabrasion Treatment', price: '$140' },
-            { name: 'Skin Revival Facial', price: '$135' },
-            { name: 'My Signature Facial', price: '$120+' },
-          ],
-        },
-      ],
       note: 'Prices marked “+” are starting prices. Your final protocol is confirmed at your consultation.',
-      image: facialsMenu,
+      image: facialsMenu.src,
       imageAlt: 'Cosmetologist performing a hydrodermabrasion treatment on a smiling client',
     },
     benefits: ['Deep hydration', 'Collagen renewal', 'Even tone', 'Refined pores', 'Natural glow', 'Smooth texture'],
     experience: {
       heading: { lead: 'A more intentional path to', accent: 'healthy, radiant skin.' },
       body: 'Every protocol combines precision, comfort and science to deliver results that look natural and last.',
-      image: facialsExperience,
+      image: facialsExperience.src,
       imageAlt: 'Client with a clay mask and eye pads during a facial with steam',
       features: [
         {
@@ -160,8 +150,8 @@ export const treatmentPages: TreatmentPage[] = [
     hero: {
       title: { lead: 'Brows &', accent: 'Lips' },
       subtitle: 'High-precision micropigmentation and lamination that enhance your natural features.',
-      image: browsHero,
-      imageWide: `${browsHero1280} 1280w, ${browsHero1920} 1920w, ${browsHero2160} 2160w`,
+      image: browsHero.src,
+      imageWide: `${browsHero1280.src} 1280w, ${browsHero1920.src} 1920w, ${browsHero2160.src} 2160w`,
       imageAlt: 'Portrait of a woman with defined brows and soft, natural lip color',
       imagePosition: 'object-[center_38%]',
     },
@@ -183,50 +173,15 @@ export const treatmentPages: TreatmentPage[] = [
     },
     menu: {
       heading: { lead: 'Our brow &', accent: 'lip menu' },
-      groups: [
-        {
-          label: 'Brows',
-          items: [
-            {
-              name: 'Shadow Brows',
-              price: '$600',
-              bestSeller: true,
-              description: 'A soft, powdered finish for a defined, filled-in look.',
-            },
-            { name: 'European Brows', price: '$600', description: 'Fine hair strokes that recreate natural brow hairs.' },
-            {
-              name: 'Laminated Brows',
-              price: '$110',
-              description: 'Lifts and sets your natural brows for a brushed-up look.',
-            },
-          ],
-        },
-        {
-          label: 'Lips',
-          items: [
-            {
-              name: 'Watercolor Lips',
-              price: '$500',
-              description: 'Sheer, blended color that enhances your natural tone.',
-            },
-            { name: 'Full Lips', price: '$600', description: 'Full, defined color with a perfected lip line.' },
-            {
-              name: 'Korean Lips',
-              price: '$490',
-              description: 'A soft gradient, deeper at the center, for a fresh look.',
-            },
-          ],
-        },
-      ],
       note: 'Touch-up recommendations are discussed during your consultation.',
-      image: browsMenu,
+      image: browsMenu.src,
       imageAlt: 'Specialist applying lip micropigmentation to a relaxed client',
     },
     benefits: ['Brow definition', 'Natural color', 'Symmetry', 'Soft lip tint', 'Wake-up ready', 'Precision'],
     experience: {
       heading: { lead: 'Precision that looks', accent: 'effortlessly natural.' },
       body: 'Every technique is chosen for your face, your skin and the result you want to see in the mirror.',
-      image: browsExperience,
+      image: browsExperience.src,
       imageAlt: 'Specialist mapping a client’s brows before micropigmentation',
       features: [
         {
@@ -253,8 +208,8 @@ export const treatmentPages: TreatmentPage[] = [
     hero: {
       title: { lead: 'Diode Laser', accent: 'Hair Removal' },
       subtitle: 'Fast, comfortable sessions for smooth skin you don’t have to think about.',
-      image: laserHero,
-      imageWide: `${laserHero1280} 1280w, ${laserHero1920} 1920w, ${laserHero2160} 2160w`,
+      image: laserHero.src,
+      imageWide: `${laserHero1280.src} 1280w, ${laserHero1920.src} 1920w, ${laserHero2160.src} 2160w`,
       imageAlt: 'Specialist performing a diode laser session on a client’s leg',
       imagePosition: 'object-[center_45%]',
     },
@@ -276,40 +231,15 @@ export const treatmentPages: TreatmentPage[] = [
     },
     menu: {
       heading: { lead: 'Laser pricing,', accent: 'per session' },
-      groups: [
-        {
-          label: 'Face',
-          items: [
-            { name: 'Upper Lip', price: '$40+' },
-            { name: 'Chin', price: '$45+' },
-            { name: 'Sideburns', price: '$45+' },
-            { name: 'Full Face', price: '$50+' },
-            { name: 'Neck', price: '$60+' },
-            { name: 'Beard', price: '$80+' },
-          ],
-        },
-        {
-          label: 'Body',
-          items: [
-            { name: 'Half Leg', price: '$50+' },
-            { name: 'Underarms', price: '$55+' },
-            { name: 'Full Arm', price: '$55+' },
-            { name: 'Bikini', price: '$60+' },
-            { name: 'Upper Chest', price: '$70+' },
-            { name: 'Full Leg', price: '$80+' },
-            { name: 'Back', price: '$100+' },
-          ],
-        },
-      ],
       note: 'Laser works best as a series of sessions. We’ll recommend the right number for your skin and hair type.',
-      image: laserMenu,
+      image: laserMenu.src,
       imageAlt: 'Woman with smooth legs sitting on a white block in a warm studio',
     },
     benefits: ['Smooth skin', 'No more razors', 'Quick sessions', 'Comfort', 'Confidence', 'Less ingrown hair'],
     experience: {
       heading: { lead: 'A smarter path to', accent: 'smooth skin.' },
       body: 'Each plan combines the right technology, the right settings and the right timing for results that last.',
-      image: laserExperience,
+      image: laserExperience.src,
       imageAlt: 'Smiling woman in a robe showing her smooth legs',
       features: [
         {
@@ -336,8 +266,8 @@ export const treatmentPages: TreatmentPage[] = [
     hero: {
       title: { lead: 'Intimate', accent: 'Skin Care' },
       subtitle: 'Gentle, discreet protocols that brighten, renew and restore comfort to delicate areas.',
-      image: intimateHero,
-      imageWide: `${intimateHero1280} 1280w, ${intimateHero1920} 1920w, ${intimateHero2160} 2160w`,
+      image: intimateHero.src,
+      imageWide: `${intimateHero1280.src} 1280w, ${intimateHero1920.src} 1920w, ${intimateHero2160.src} 2160w`,
       imageAlt: 'Woman with glowing skin gently touching her face and shoulder',
       imagePosition: 'object-[center_30%]',
     },
@@ -359,37 +289,15 @@ export const treatmentPages: TreatmentPage[] = [
     },
     menu: {
       heading: { lead: 'Our intimate', accent: 'care menu' },
-      groups: [
-        {
-          items: [
-            {
-              name: 'Vajacial (Intimate Facial)',
-              price: '$120',
-              bestSeller: true,
-              description: 'Deep cleansing for the bikini area: exfoliation, ingrown-hair care and soothing hydration.',
-            },
-            {
-              name: 'Underarm Depigmentation',
-              price: '$1,100',
-              description: 'A progressive protocol that lightens dark underarms and evens out skin tone.',
-            },
-            {
-              name: 'Intimate Area Depigmentation',
-              price: '$1,250',
-              description: 'Gentle, progressive lightening that restores an even tone to delicate areas.',
-            },
-          ],
-        },
-      ],
       note: 'Not sure which one to choose? We’ll guide you during your consultation.',
-      image: intimateMenu,
+      image: intimateMenu.src,
       imageAlt: 'Close-up of smooth, glowing legs against a warm background',
     },
     benefits: ['Discretion', 'Even tone', 'Ingrown-hair care', 'Comfort', 'Gentle care', 'Confidence'],
     experience: {
       heading: { lead: 'Delicate care,', accent: 'done with respect.' },
       body: 'Every treatment is designed around comfort, hygiene and the health of your most sensitive skin.',
-      image: intimateExperience,
+      image: intimateExperience.src,
       imageAlt: 'Hand resting gently on smooth, hydrated skin',
       features: [
         {

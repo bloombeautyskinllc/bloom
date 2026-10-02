@@ -24,8 +24,8 @@ export const treatmentCategories: TreatmentCategory[] = [
     shortTitle: 'Facials & skin care',
     description:
       'Advanced protocols and clinical-grade technology to restore, oxygenate and revive your complexion.',
-    image: facials,
-    menuImage: menuFacials,
+    image: facials.src,
+    menuImage: menuFacials.src,
   },
   {
     slug: 'brows-lips',
@@ -33,8 +33,8 @@ export const treatmentCategories: TreatmentCategory[] = [
     shortTitle: 'Brows & lips',
     description:
       'High-precision micropigmentation and lamination that enhance your features, with no daily makeup needed.',
-    image: brows,
-    menuImage: menuBrows,
+    image: brows.src,
+    menuImage: menuBrows.src,
   },
   {
     slug: 'diode-laser',
@@ -42,8 +42,8 @@ export const treatmentCategories: TreatmentCategory[] = [
     shortTitle: 'Diode laser',
     description:
       "Fast, comfortable sessions for smooth, hair-free skin you don't have to think about.",
-    image: laser,
-    menuImage: menuLaser,
+    image: laser.src,
+    menuImage: menuLaser.src,
   },
   {
     slug: 'intimate-care',
@@ -51,7 +51,7 @@ export const treatmentCategories: TreatmentCategory[] = [
     shortTitle: 'Intimate care',
     description:
       'Gentle, discreet protocols that brighten, renew and restore comfort to your most delicate areas.',
-    image: intimate,
-    menuImage: menuIntimate,
+    image: intimate.src,
+    menuImage: menuIntimate.src,
   },
 ];

@@ -1,4 +1,12 @@
 node_modules
 dist
+.next
+.next-check
+.next-local
+next-env.d.ts
+*.tsbuildinfo
 .env
 .env.local
+.env*.local
+public/favicon.png
+supabase/*.generated.sql

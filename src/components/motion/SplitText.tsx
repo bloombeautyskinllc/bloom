@@ -1,3 +1,5 @@
+'use client';
+
 import { Children, cloneElement, isValidElement, type CSSProperties, type ElementType, type ReactNode } from 'react';
 import { useInView } from '../../hooks/useInView';
 

@@ -1,3 +1,5 @@
+'use client';
+
 import { useInView } from '../../hooks/useInView';
 
 type SectionLabelProps = {

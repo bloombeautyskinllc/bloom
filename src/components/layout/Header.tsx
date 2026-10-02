@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { HiChevronDown, HiOutlineMenuAlt4, HiX } from 'react-icons/hi';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { HiChevronDown, HiOutlineMenuAlt4, HiOutlineUser, HiX } from 'react-icons/hi';
 import { FaFacebook, FaInstagram, FaTiktok } from 'react-icons/fa';
 import Logo from '../ui/Logo';
 import { navLinks, routes, site } from '../../data/site';
@@ -35,7 +36,7 @@ function Hours() {
 }
 
 export default function Header() {
-  const { pathname } = useLocation();
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -125,7 +126,7 @@ export default function Header() {
             menuOpen ? 'max-lg:rounded-b-none' : ''
           }`}
         >
-          <Link to={routes.home} aria-label="BLOOM Beauty Skin — home">
+          <Link href={routes.home} aria-label="BLOOM Beauty Skin — home">
             <Logo tone={open ? 'dark' : 'light'} />
           </Link>
 
@@ -148,7 +149,7 @@ export default function Header() {
             {navLinks.map((link) => (
               <Link
                 key={link.href}
-                to={link.href}
+                href={link.href}
                 className={`link-grow pb-0.5 text-[13px] font-normal uppercase tracking-[0.03em] ${navText}`}
               >
                 {link.label}
@@ -157,8 +158,18 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
+            {/* Signed out: opens the sign-in modal (intercepted); signed in: the client area */}
             <Link
-              to={routes.booking}
+              href={routes.dashboard}
+              aria-label="My account"
+              className={`hidden h-11 w-11 place-items-center rounded-full transition lg:grid ${
+                open ? 'text-ink hover:bg-sand' : 'text-cream hover:bg-cream/10'
+              }`}
+            >
+              <HiOutlineUser className="h-[22px] w-[22px]" />
+            </Link>
+            <Link
+              href={routes.booking}
               className={`${open ? 'btn-dark' : 'btn-light'} px-5 py-2 font-serif text-lg font-normal italic sm:px-[26px] sm:py-2.5 sm:text-xl ${
                 menuOpen ? 'max-lg:hidden' : ''
               }`}
@@ -212,7 +223,7 @@ export default function Header() {
                     }`}
                   >
                     <Link
-                      to={routes.treatment(t.slug)}
+                      href={routes.treatment(t.slug)}
                       onMouseEnter={() => setActiveTreatment(i)}
                       onFocus={() => setActiveTreatment(i)}
                       className={`flex items-center gap-3 py-[9px] text-[21px] uppercase text-ink transition duration-500 ${ease} ${
@@ -258,7 +269,7 @@ export default function Header() {
               <Hours />
             </p>
             <Link
-              to={routes.booking}
+              href={routes.booking}
               className="grid place-items-center border-l border-stone py-4 text-base text-ink transition hover:bg-sand"
             >
               Book now
@@ -285,7 +296,7 @@ export default function Header() {
                     menuOpen ? 'translate-x-0 opacity-100' : '-translate-x-3 opacity-0'
                   }`}
                 >
-                  <Link to={routes.treatment(t.slug)} className="block py-[9px] text-[22px] uppercase text-ink">
+                  <Link href={routes.treatment(t.slug)} className="block py-[9px] text-[22px] uppercase text-ink">
                     {t.shortTitle}
                   </Link>
                 </li>
@@ -298,12 +309,17 @@ export default function Header() {
           <p className="flex items-center justify-between gap-4 border-t border-stone px-[18px] py-4 text-base">
             <Hours />
           </p>
-          <Link
-            to={routes.booking}
-            className="block border-t border-stone py-4 text-center text-base text-ink transition hover:bg-sand"
-          >
-            Book now
-          </Link>
+          <div className="grid grid-cols-2 border-t border-stone">
+            <Link href={routes.dashboard} className="flex items-center justify-center gap-2 py-4 text-base text-ink transition hover:bg-sand">
+              <HiOutlineUser className="h-5 w-5" /> My account
+            </Link>
+            <Link
+              href={routes.booking}
+              className="block border-l border-stone py-4 text-center text-base text-ink transition hover:bg-sand"
+            >
+              Book now
+            </Link>
+          </div>
         </div>
       </div>
     </header>

@@ -32,7 +32,7 @@ function FaceCard() {
       className="relative isolate h-[620px] overflow-hidden rounded-[22px] sm:h-[680px] lg:row-span-2 lg:h-auto"
     >
       <img
-        src={approachFace}
+        src={approachFace.src}
         alt="Portrait of a woman with radiant, glowing skin"
         loading="lazy"
         className="reveal-zoom absolute inset-0 -z-10 h-full w-full object-cover"
@@ -65,7 +65,7 @@ function FaceCard() {
 function BenefitsMarquee() {
   return (
     <Reveal variant="wipe" className="relative isolate flex min-h-[340px] flex-col justify-between overflow-hidden rounded-[22px] py-8 sm:py-10">
-      <img src={approachMassage} alt="" loading="lazy" className="reveal-zoom absolute inset-0 -z-10 h-full w-full object-cover" />
+      <img src={approachMassage.src} alt="" loading="lazy" className="reveal-zoom absolute inset-0 -z-10 h-full w-full object-cover" />
       <div className="absolute inset-0 -z-10 bg-ink/35" />
       <SplitText as="p" delay={400} className="px-7 text-[28px] font-medium tracking-[-0.02em] text-white sm:px-10 sm:text-[34px]">
         Your skin deserves better
@@ -114,7 +114,7 @@ function TrustCard() {
       <p className="max-w-[180px] text-sm uppercase leading-snug tracking-[0.06em] text-ink">Trusted by hundreds of clients</p>
       <div className="mt-3 flex -space-x-4">
         {[avatar1, avatar2, avatar3].map((a, i) => (
-          <Reveal as="img" variant="scale" key={i} delay={700 + i * 140} src={a} alt="" loading="lazy" className="h-[62px] w-[62px] rounded-full border-4 border-cream object-cover" />
+          <Reveal as="img" variant="scale" key={i} delay={700 + i * 140} src={a.src} alt="" loading="lazy" className="h-[62px] w-[62px] rounded-full border-4 border-cream object-cover" />
         ))}
       </div>
     </Reveal>
@@ -163,7 +163,7 @@ export default function Approach() {
                 </p>
               </Reveal>
               <ParallaxImage
-                src={approachProfile}
+                src={approachProfile.src}
                 alt="Profile portrait with the BLOOM monogram"
                 delay={300}
                 className="h-[300px] w-full rounded-[22px] sm:h-[340px] lg:h-full"

@@ -18,6 +18,23 @@
 }
 
 @layer components {
+  /* Body copy of legal pages (Privacy, Terms) */
+  .legal-prose {
+    @apply flex flex-col gap-4 text-[15px] leading-relaxed text-muted sm:text-base;
+  }
+  .legal-prose h3 {
+    @apply mt-2 font-sans text-base font-semibold text-ink;
+  }
+  .legal-prose ul {
+    @apply flex list-disc flex-col gap-2 pl-5 marker:text-bronze;
+  }
+  .legal-prose strong {
+    @apply font-semibold text-ink;
+  }
+  .legal-prose a {
+    @apply text-ink underline decoration-taupe underline-offset-4 transition hover:decoration-bronze;
+  }
+
   .container-site {
     @apply mx-auto w-full max-w-site px-5 sm:px-8 lg:px-10;
   }

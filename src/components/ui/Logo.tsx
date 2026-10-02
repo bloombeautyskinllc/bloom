@@ -11,7 +11,7 @@ export default function Logo({ tone = 'light', className = '' }: LogoProps) {
   return (
     <span className={`inline-flex items-center gap-3 ${className}`}>
       <img
-        src={logoMark}
+        src={logoMark.src}
         alt=""
         aria-hidden
         className={`h-[34px] w-auto ${tone === 'dark' ? 'brightness-0 opacity-90' : ''}`}

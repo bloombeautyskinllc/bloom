@@ -1,5 +1,6 @@
+'use client';
+
 import type { ElementType } from 'react';
-import { Link, useParams } from 'react-router-dom';
 import SectionLabel from '../components/ui/SectionLabel';
 import Flower from '../components/ui/Flower';
 import Testimonials from '../components/home/Testimonials';
@@ -10,9 +11,10 @@ import GlowOrb from '../components/decor/GlowOrb';
 import Sparkles from '../components/decor/Sparkles';
 import ComingSoon from './ComingSoon';
 import logoMark from '../assets/images/logo-mark.png';
-import { routes } from '../data/site';
+import Link from 'next/link';
+import { routes, site } from '../data/site';
 import { treatmentCategories } from '../data/treatments';
-import { findTreatmentPage, type SplitHeading, type TreatmentPage as Page } from '../data/treatmentPages';
+import { findTreatmentPage, type MenuGroup, type MenuItem, type SplitHeading, type TreatmentPage as Page } from '../data/treatmentPages';
 import { useParallax } from '../hooks/useParallax';
 
 type HeadingProps = {
@@ -33,6 +35,13 @@ function Heading({ as, text, className, delay, keepAccentTogether = false }: Hea
 }
 
 const ease = 'ease-[cubic-bezier(0.22,1,0.36,1)]';
+
+function bookingHref(item: MenuItem) {
+  if (!item.book) return routes.booking;
+  const params = new URLSearchParams({ treatment: item.book.treatment });
+  if (item.book.option) params.set('options', item.book.option);
+  return `${routes.booking}?${params.toString()}`;
+}
 
 function Hero({ hero }: { hero: Page['hero'] }) {
   const photoRef = useParallax<HTMLDivElement>(0.3, 'top');
@@ -70,12 +79,14 @@ function Hero({ hero }: { hero: Page['hero'] }) {
           {hero.subtitle}
         </Reveal>
         <Reveal delay={1100} className="mt-8">
-          <Link
-            to={routes.booking}
+          <a
+            href={site.whatsappUrl}
+            target="_blank"
+            rel="noreferrer"
             className="sheen relative isolate block overflow-hidden rounded-full bg-cream px-8 py-3 font-serif text-xl italic text-ink shadow-soft transition duration-500 [--sheen:rgba(131,104,85,0.22)] hover:-translate-y-0.5 hover:bg-white"
           >
             Book your skin consultation
-          </Link>
+          </a>
         </Reveal>
       </div>
     </section>
@@ -119,7 +130,7 @@ function Why({ why }: { why: Page['why'] }) {
   );
 }
 
-function Menu({ menu, benefits }: { menu: Page['menu']; benefits: string[] }) {
+function Menu({ menu, groups, benefits }: { menu: Page['menu']; groups: MenuGroup[]; benefits: string[] }) {
   return (
     <section className="bg-sand pt-20 sm:pt-[100px]">
       <div className="container-site">
@@ -127,7 +138,7 @@ function Menu({ menu, benefits }: { menu: Page['menu']; benefits: string[] }) {
           <Reveal className="rounded-[22px] bg-stone px-6 py-8 sm:p-10 lg:self-start">
             <Heading as="h2" text={menu.heading} delay={200} className="heading-md" />
             <div className="mt-8 flex flex-col gap-[26px] sm:mt-10">
-              {menu.groups.map((group, g) => (
+              {groups.map((group, g) => (
                 <div key={group.label ?? g}>
                   {group.label && (
                     <Reveal as="h3" variant="left" className="pb-1 text-[11px] font-bold uppercase tracking-[0.3em] text-bronze">
@@ -141,10 +152,16 @@ function Menu({ menu, benefits }: { menu: Page['menu']; benefits: string[] }) {
                         variant="fade"
                         key={item.name}
                         delay={300 + Math.min(i, 8) * 70}
-                        className={`group flex justify-between gap-4 border-b border-dotted border-ink/30 py-3.5 font-serif text-lg text-ink sm:text-xl ${
-                          item.description ? 'items-start' : 'items-center'
-                        }`}
+                        className="border-b border-dotted border-ink/30 font-serif text-lg text-ink sm:text-xl"
                       >
+                        {/* Each row opens the booking flow with this treatment (and laser area) preselected */}
+                        <Link
+                          href={bookingHref(item)}
+                          aria-label={`Book ${item.name}, ${item.price}`}
+                          className={`group flex justify-between gap-4 py-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                            item.description ? 'items-start' : 'items-center'
+                          }`}
+                        >
                         <span className={`flex flex-col gap-1 transition-transform duration-500 ${ease} group-hover:translate-x-1.5`}>
                           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
                             {item.name}
@@ -159,6 +176,7 @@ function Menu({ menu, benefits }: { menu: Page['menu']; benefits: string[] }) {
                           )}
                         </span>
                         <span className="shrink-0 text-muted transition-colors duration-500 group-hover:text-ink">{item.price}</span>
+                        </Link>
                       </Reveal>
                     ))}
                   </ul>
@@ -233,16 +251,18 @@ function Experience({ experience }: { experience: Page['experience'] }) {
             <Reveal variant="scale" delay={600} className="relative isolate flex min-h-[320px] flex-col items-center justify-center gap-[22px] text-center">
               <Flower className="absolute inset-0 -z-10 m-auto h-full max-h-[340px] w-full" />
               <p className="max-w-[190px] font-serif text-[28px] leading-tight text-ink">{experience.question}</p>
-              <Link
-                to={routes.booking}
+              <a
+                href={site.whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
                 className="group inline-flex items-center gap-2.5 rounded-full bg-cocoa p-[5px] pr-5 text-cream transition duration-500 hover:-translate-y-0.5 hover:bg-ink"
               >
                 <span className="relative grid h-[34px] w-[34px] place-items-center rounded-full bg-cream transition group-hover:scale-105">
                   <span aria-hidden className="decor-motion absolute inset-0 animate-pulse-ring rounded-full bg-cream" />
-                  <img src={logoMark} alt="" aria-hidden className="relative h-[18px] w-auto brightness-0" />
+                  <img src={logoMark.src} alt="" aria-hidden className="relative h-[18px] w-auto brightness-0" />
                 </span>
                 <span className="font-serif text-lg italic">Book a consultation</span>
-              </Link>
+              </a>
             </Reveal>
           </div>
         </div>
@@ -251,8 +271,8 @@ function Experience({ experience }: { experience: Page['experience'] }) {
   );
 }
 
-export default function TreatmentPage() {
-  const { slug } = useParams();
+/** `menu`: the price menu rows, loaded from the catalog by the server page */
+export default function TreatmentPage({ slug, menu }: { slug: string; menu: MenuGroup[] }) {
   const page = findTreatmentPage(slug);
 
   if (!page) {
@@ -264,7 +284,7 @@ export default function TreatmentPage() {
     <>
       <Hero hero={page.hero} />
       <Why why={page.why} />
-      <Menu menu={page.menu} benefits={page.benefits} />
+      <Menu menu={page.menu} groups={menu} benefits={page.benefits} />
       <Experience experience={page.experience} />
       <Testimonials />
     </>

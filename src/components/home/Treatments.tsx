@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { HiArrowUpRight } from 'react-icons/hi2';
 import SectionLabel from '../ui/SectionLabel';
 import Reveal from '../motion/Reveal';
@@ -39,7 +39,7 @@ export default function Treatments() {
           {treatmentCategories.map((t, i) => (
             <Reveal as="li" key={t.slug} delay={i * 130} duration={1300}>
               <Link
-                to={routes.treatment(t.slug)}
+                href={routes.treatment(t.slug)}
                 className="group relative flex aspect-[16/10] flex-col justify-end overflow-hidden rounded-[14px] p-6 text-cream sm:aspect-[4/5] lg:aspect-auto lg:h-[460px]"
               >
                 <img
@@ -74,7 +74,7 @@ export default function Treatments() {
         </ul>
 
         <Reveal delay={300} className="mt-10 flex justify-start sm:mt-16 sm:justify-center">
-          <Link to={routes.booking} className="btn-dark">
+          <Link href={routes.booking} className="btn-dark">
             View the full treatment menu
           </Link>
         </Reveal>

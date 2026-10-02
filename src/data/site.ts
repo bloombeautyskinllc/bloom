@@ -27,7 +27,9 @@ export const routes = {
   privacy: '/privacy',
   terms: '/terms',
   intakeForm: '/intake-form',
-  treatmentPattern: '/treatments/:slug',
+  dashboard: '/dashboard',
+  admin: '/admin',
+  authCallback: '/auth/callback',
   treatment: (slug: string) => `/treatments/${slug}`,
 } as const;
 

@@ -28,7 +28,7 @@ export default function RotatingBadge({
           </textPath>
         </text>
       </svg>
-      <img src={logoMark} alt="" className="h-7 w-auto" />
+      <img src={logoMark.src} alt="" className="h-7 w-auto" />
     </span>
   );
 }

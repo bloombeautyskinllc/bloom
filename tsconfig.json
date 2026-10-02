@@ -1,8 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2022"
+    ],
     "skipLibCheck": true,
     "strict": true,
     "noUnusedLocals": true,
@@ -13,8 +16,33 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
+    "allowJs": false,
+    "esModuleInterop": true,
+    "incremental": true,
     "jsx": "react-jsx",
-    "types": ["vite/client"]
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["src"]
+  "include": [
+    "next-env.d.ts",
+    "src",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    ".next-check/types/**/*.ts",
+    ".next-check/dev/types/**/*.ts",
+    ".next-local/types/**/*.ts",
+    ".next-local/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

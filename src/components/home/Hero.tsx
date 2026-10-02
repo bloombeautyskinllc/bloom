@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import SectionLabel from '../ui/SectionLabel';
 import Reveal from '../motion/Reveal';
 import SplitText from '../motion/SplitText';
@@ -11,7 +11,7 @@ import heroMobile from '../../assets/images/hero.webp';
 import hero1280 from '../../assets/images/heroes/home-1280.webp';
 import hero1920 from '../../assets/images/heroes/home-1920.webp';
 import hero2160 from '../../assets/images/heroes/home-2160.webp';
-import { routes, site } from '../../data/site';
+import { site } from '../../data/site';
 
 const highlights = [
   { value: site.treatmentsPerformed, label: 'treatments performed' },
@@ -35,9 +35,9 @@ export default function Hero() {
       <div ref={photoRef} className="parallax absolute inset-0 -z-20">
         {/* High-res photo from tablet up; phones keep the original lighter file */}
         <picture className="block h-full w-full">
-          <source media="(min-width: 768px)" srcSet={`${hero1280} 1280w, ${hero1920} 1920w, ${hero2160} 2160w`} sizes="100vw" />
+          <source media="(min-width: 768px)" srcSet={`${hero1280.src} 1280w, ${hero1920.src} 1920w, ${hero2160.src} 2160w`} sizes="100vw" />
           <img
-            src={heroMobile}
+            src={heroMobile.src}
             alt="Client relaxing during a facial in a warm, softly lit treatment suite"
             fetchPriority="high"
             className="decor-motion h-full w-full animate-kenburns object-cover object-[70%_center] lg:object-[center_30%]"
@@ -63,10 +63,10 @@ export default function Hero() {
             experience, designed to bring back your skin&apos;s natural glow.
           </Reveal>
           <Reveal delay={1300} className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link to={routes.booking} className="btn-light py-2.5 font-serif text-lg font-normal italic sm:text-xl">
+            <a href={site.whatsappUrl} target="_blank" rel="noreferrer" className="btn-light py-2.5 font-serif text-lg font-normal italic sm:text-xl">
               Book your skin consultation
-            </Link>
-            <Link to="/#treatments" className="btn-ghost-light py-2.5 font-serif text-lg font-normal italic sm:text-xl">
+            </a>
+            <Link href="/#treatments" className="btn-ghost-light py-2.5 font-serif text-lg font-normal italic sm:text-xl">
               Explore our treatments
             </Link>
           </Reveal>
@@ -77,9 +77,9 @@ export default function Hero() {
 
         {/* Turning brand seal, doubling as a booking shortcut */}
         <Reveal variant="scale" delay={1500} className="absolute bottom-16 right-10 hidden lg:block">
-          <Link to={routes.booking} aria-label="Book your skin consultation" className="group block">
+          <a href={site.whatsappUrl} target="_blank" rel="noreferrer" aria-label="Book your skin consultation on WhatsApp" className="group block">
             <RotatingBadge className="transition duration-500 group-hover:scale-105 group-hover:bg-cream/20" />
-          </Link>
+          </a>
         </Reveal>
 
         {/* Scroll cue */}
