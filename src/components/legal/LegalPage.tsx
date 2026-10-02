@@ -28,8 +28,9 @@ function TableOfContents({ sections }: { sections: LegalSection[] }) {
 
 // Long-form legal document: same backdrop and heading style as the site, with a sticky table of contents
 export default function LegalPage({ lead, accent, intro, updated, sections }: Props) {
+  // overflow-clip, not overflow-hidden: hidden would become the sticky table of contents' scroll container
   return (
-    <section className="relative isolate overflow-hidden bg-gradient-to-b from-cream via-cream to-sand pb-24 pt-32 sm:pt-44">
+    <section className="relative isolate overflow-clip bg-gradient-to-b from-cream via-cream to-sand pb-24 pt-32 sm:pt-44">
       <GlowOrb className="-left-40 top-10 h-[560px] w-[560px]" />
       <GlowOrb className="-right-48 top-[40%] h-[520px] w-[520px]" color="rgba(205, 194, 180, 0.5)" delay={-7} />
 
