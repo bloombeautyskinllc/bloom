@@ -14,6 +14,8 @@ const laser: CatalogTreatment = {
   menuGroup: null,
   priceCents: 0,
   priceType: 'from',
+  depositCents: null,
+  depositPercent: null,
   durationMinutes: 10,
   isBestSeller: false,
   minOptions: 1,

@@ -84,8 +84,14 @@ export function termsSections(s: PublicSettings): LegalSection[] {
             protocol and price are confirmed with your specialist during your consultation, and any difference is paid
             at the studio.
           </p>
+          {s.payments_enabled && s.deposit_percent > 0 && s.deposit_percent < 100 && (
+            <p>
+              To reserve your time online you pay a deposit of {s.deposit_percent}% of the price (or the fixed deposit
+              shown for the treatment). The rest is paid after your treatment, online or at the studio.
+            </p>
+          )}
           <p>
-            Online payments are processed securely by Stripe. The price of a confirmed appointment does not change if
+            Online payments are processed securely by Square. The price of a confirmed appointment does not change if
             we update our prices afterwards.
           </p>
         </>

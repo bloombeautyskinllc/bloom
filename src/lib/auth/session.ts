@@ -7,16 +7,16 @@ import { authModalUrl } from './redirect';
 
 export type Profile = Tables<'profiles'>;
 
-// One lookup per request, shared by layouts and pages
+// One lookup per request, shared by layouts and pages. getClaims verifies the JWT locally against the
+// project's signing keys (no round trip to the Auth server); with legacy symmetric keys it calls getUser.
 export const getSession = cache(async () => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  const { data } = await supabase.auth.getClaims();
+  const userId = data?.claims?.sub;
+  if (!userId) return null;
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle();
-  return profile ? { user, profile } : null;
+  const { data: profile } = await supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle();
+  return profile ? { user: { id: userId }, profile } : null;
 });
 
 /** Signed-in client who finished onboarding; otherwise opens the auth modal at the right step (on the home page). */

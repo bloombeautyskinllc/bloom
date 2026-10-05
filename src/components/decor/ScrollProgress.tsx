@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useRef } from 'react';
 
 // Hairline across the top of the window that fills as the page is read

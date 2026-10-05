@@ -6,7 +6,6 @@ import { FaFacebook, FaInstagram, FaTiktok } from 'react-icons/fa';
 import Logo from '../ui/Logo';
 import { navLinks, routes, site } from '../../data/site';
 import { treatmentCategories } from '../../data/treatments';
-import { findTreatmentPage } from '../../data/treatmentPages';
 import { setScrollLocked } from '../../lib/smoothScroll';
 
 function SocialLinks() {
@@ -99,9 +98,10 @@ export default function Header() {
     };
   }, [open]);
 
-  // Pages that open with a full-bleed photo keep the bar transparent until scrolled
-  const heroPage =
-    pathname === routes.home || findTreatmentPage(pathname.match(/^\/treatments\/([^/]+)/)?.[1]) !== undefined;
+  // Pages that open with a full-bleed photo keep the bar transparent until scrolled. Every category has
+  // a treatment page (see treatments.test.ts), so the light category list stands in for the page data.
+  const treatmentSlug = pathname.match(/^\/treatments\/([^/]+)/)?.[1];
+  const heroPage = pathname === routes.home || treatmentCategories.some((c) => c.slug === treatmentSlug);
   const solid = scrolled || !heroPage;
   const barTone = open
     ? 'border-stone bg-cream'

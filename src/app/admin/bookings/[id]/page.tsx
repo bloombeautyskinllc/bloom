@@ -1,14 +1,18 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { z } from 'zod';
 import AuditTimeline from '@/components/admin/AuditTimeline';
 import BookingActions from '@/components/admin/BookingActions';
 import NoteForm from '@/components/admin/NoteForm';
+import PaymentsPanel from '@/components/admin/PaymentsPanel';
 import { PageHeader, Panel, StatusBadge, buttonClass } from '@/components/admin/ui';
 import { requireStaff } from '@/lib/auth/session';
 import { formatDateLong, formatDuration, formatMoney, formatTime } from '@/lib/booking/format';
 import { formatPhone } from '@/lib/format/phone';
 import { getPublicSettings } from '@/lib/settings';
+import { payableNow, refreshPendingRefunds } from '@/lib/payments/links';
+import { squareConfig } from '@/lib/payments/square';
 import { createClient } from '@/lib/supabase/server';
 
 export const metadata = { title: 'Booking' };
@@ -25,6 +29,10 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 export default async function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { profile } = await requireStaff(`/admin/bookings/${id}`);
+  // Settle refunds still marked pending (normally done by the Square webhook)
+  if (z.uuid().safeParse(id).success) {
+    await refreshPendingRefunds({ bookingId: id }).catch((e) => console.error('[payments] refund refresh failed', e));
+  }
   const [t, settings] = await Promise.all([getTranslations('bo'), getPublicSettings()]);
   const tz = settings.timezone;
   const supabase = await createClient();
@@ -32,11 +40,17 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
   const { data: b } = await supabase.from('booking_search').select('*').eq('id', id).maybeSingle();
   if (!b) notFound();
 
-  const [{ data: notes }, { data: events }, { data: emails }] = await Promise.all([
+  const [{ data: notes }, { data: events }, { data: emails }, { data: money }, { data: payments }, { data: refunds }, { data: openLink }] = await Promise.all([
     supabase.from('booking_notes').select('id, body, created_at, author:profiles!author_id(full_name)').eq('booking_id', id).is('deleted_at', null).order('created_at'),
     supabase.from('calendar_events').select('kind, sync_status, last_error, last_synced_at').eq('booking_id', id),
     supabase.from('notifications').select('template, recipient, status, created_at').eq('booking_id', id).order('created_at'),
+    supabase.from('bookings').select('status, hold_expires_at, total_cents, amount_due_cents, amount_paid_cents, amount_refunded_cents').eq('id', id).single(),
+    supabase.from('payments').select('id, amount_cents, card_brand, card_last4, receipt_url, paid_at').eq('booking_id', id).order('paid_at'),
+    supabase.from('refunds').select('id, amount_cents, status, reason, created_at').eq('booking_id', id).order('created_at'),
+    supabase.from('payment_links').select('url, amount_cents, kind').eq('booking_id', id).eq('status', 'open').maybeSingle(),
   ]);
+  const paidCents = money?.amount_paid_cents ?? 0;
+  const refundedCents = money?.amount_refunded_cents ?? 0;
 
   const minutes = (Date.parse(b.end_at!) - Date.parse(b.start_at!)) / 60_000;
 
@@ -59,7 +73,14 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-4">
           <Panel title={t('booking.actions')}>
-            <BookingActions bookingId={b.id!} status={b.status!} startAt={b.start_at!} started={Date.parse(b.start_at!) <= Date.now()} timeZone={tz} />
+            <BookingActions
+              bookingId={b.id!}
+              status={b.status!}
+              startAt={b.start_at!}
+              started={Date.parse(b.start_at!) <= Date.now()}
+              timeZone={tz}
+              refundableCents={paidCents - refundedCents}
+            />
           </Panel>
 
           <Panel>
@@ -118,6 +139,20 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
         </div>
 
         <div className="flex flex-col gap-4">
+          <Panel title={t('payments.title')}>
+            <PaymentsPanel
+              bookingId={b.id!}
+              timeZone={tz}
+              amountDueCents={money?.amount_due_cents ?? 0}
+              paidCents={paidCents}
+              refundedCents={refundedCents}
+              payments={(payments ?? []).map((p) => ({ id: p.id, amountCents: p.amount_cents, cardBrand: p.card_brand, cardLast4: p.card_last4, receiptUrl: p.receipt_url, paidAt: p.paid_at }))}
+              refunds={(refunds ?? []).map((r) => ({ id: r.id, amountCents: r.amount_cents, status: r.status, reason: r.reason, createdAt: r.created_at }))}
+              openLink={openLink ? { url: openLink.url, amountCents: openLink.amount_cents, kind: openLink.kind } : null}
+              suggestedCents={money && squareConfig() ? (payableNow(money)?.amountCents ?? null) : null}
+              canRefund={profile.role === 'admin'}
+            />
+          </Panel>
           <Panel title={t('booking.notifications')}>
             {!emails?.length ? (
               <p className="text-sm text-muted">—</p>

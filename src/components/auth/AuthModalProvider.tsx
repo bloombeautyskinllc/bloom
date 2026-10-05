@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { routes } from '@/data/site';
 import { AUTH_PARAMS, safeNext, type AuthStep } from '@/lib/auth/redirect';
@@ -14,16 +14,6 @@ const isProtected = (pathname: string) =>
   PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 
 type AuthState = { open: boolean; step: AuthStep; next: string; error: string | null; returnTo: string; defaults: OnboardingDefaults | null };
-
-type AuthModalApi = { openAuth: (next: string) => Promise<void> };
-
-const AuthModalContext = createContext<AuthModalApi | null>(null);
-
-export function useAuthModal() {
-  const ctx = useContext(AuthModalContext);
-  if (!ctx) throw new Error('useAuthModal must be used inside AuthModalProvider');
-  return ctx;
-}
 
 // Current page without the modal's own query params: where Google sends the visitor back to
 function currentPageWithoutAuthParams() {
@@ -67,9 +57,24 @@ export default function AuthModalProvider({ children }: { children: ReactNode })
     setState({ open: true, step, next, error, returnTo: currentPageWithoutAuthParams(), defaults });
   }, []);
 
+  // "Ready" only changes on sign-out, so it is checked once per page load and a click on "Book now"
+  // navigates straight away instead of waiting for the profile query. The server guards still apply.
+  const ready = useRef(false);
+  useEffect(() => {
+    resolveStep().then((status) => {
+      if (status.step === 'ready') ready.current = true;
+    });
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') ready.current = false;
+    });
+    return () => data.subscription.unsubscribe();
+  }, [resolveStep, supabase]);
+
   const openAuth = useCallback(
     async (next: string) => {
+      if (ready.current) return router.push(next);
       const { step, defaults } = await resolveStep();
+      ready.current = step === 'ready';
       if (step === 'ready') router.push(next);
       else open(step, next, null, defaults);
     },
@@ -131,10 +136,8 @@ export default function AuthModalProvider({ children }: { children: ReactNode })
     return () => setScrollLocked(false);
   }, [state.open]);
 
-  const api = useMemo(() => ({ openAuth }), [openAuth]);
-
   return (
-    <AuthModalContext.Provider value={api}>
+    <>
       {children}
       <AuthModal
         open={state.open}
@@ -145,6 +148,6 @@ export default function AuthModalProvider({ children }: { children: ReactNode })
         defaults={state.defaults}
         onClose={close}
       />
-    </AuthModalContext.Provider>
+    </>
   );
 }

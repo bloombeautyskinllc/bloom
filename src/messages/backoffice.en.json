@@ -97,17 +97,28 @@
     "specialist": "Specialist",
     "payment": "Payment",
     "columns": {
-      "when": "When",
+      "when": "Appointment",
       "client": "Client",
       "service": "Service",
       "total": "Total",
       "status": "Status",
       "payment": "Payment",
-      "ref": "Ref"
+      "ref": "Ref",
+      "booked": "Booked"
     },
     "count": "{count, plural, one {# booking} other {# bookings}}",
     "overridden": "Rules overridden",
-    "admin": "Booked by staff"
+    "admin": "Booked by staff",
+    "sortBy": "Sort",
+    "sort": {
+      "created_desc": "newest bookings first",
+      "created_asc": "oldest bookings first",
+      "start_asc": "appointment date (soonest)",
+      "start_desc": "appointment date (latest)",
+      "client_asc": "client name (A–Z)",
+      "total_desc": "total (highest)",
+      "total_asc": "total (lowest)"
+    }
   },
   "booking": {
     "title": "Booking {code}",
@@ -157,6 +168,12 @@
       "cancelled": "Booking cancelled.",
       "rescheduled": "Booking moved.",
       "note": "Note added."
+    },
+    "refundOnCancel": "Refund of the {amount} paid online",
+    "refundMode": {
+      "full": "Full refund (recommended when the business cancels)",
+      "policy": "As per the client cancellation policy",
+      "none": "No refund"
     }
   },
   "errors": {
@@ -175,7 +192,11 @@
     "invalid_options": "Check the selected options.",
     "invalid_price": "Prices can’t be negative.",
     "not_cancellable": "This booking can no longer be cancelled.",
-    "generic": "Something went wrong. Please try again."
+    "generic": "Something went wrong. Please try again.",
+    "invalid_amount": "Enter an amount greater than zero and no more than what is left to refund.",
+    "refund_exceeds_paid": "That is more than what is left to refund (including refunds still being processed).",
+    "not_payable": "Nothing can be paid online for this booking right now (it is not confirmed, or it is fully paid).",
+    "payments_unavailable": "Square could not create the link. Check the Square settings and try again."
   },
   "calendar": {
     "title": "Calendar",
@@ -297,8 +318,6 @@
     "name": "Name",
     "slug": "URL name",
     "description": "Description",
-    "includes": "What’s included (one per line)",
-    "menuGroup": "Menu group",
     "price": "Price ($)",
     "priceType": "Price type",
     "fixed": "Fixed",
@@ -307,18 +326,18 @@
     "extraMinutes": "Extra minutes",
     "bufferBefore": "Prep before (min)",
     "bufferAfter": "Cleanup after (min)",
-    "deposit": "Deposit ($, optional)",
-    "minOptions": "Minimum options",
-    "maxOptions": "Maximum options",
+    "deposit": "Deposit at booking (%)",
     "group": "Group",
     "bestSeller": "Best seller",
-    "active": "Offered online",
-    "needsReview": "Estimated values: review",
-    "reviewed": "Mark as reviewed",
     "color": "Calendar color",
     "noDuration": "No duration: not bookable",
     "saved": "Saved.",
-    "pending": "Items to review"
+    "pending": "Items to review",
+    "depositBreakdown": "Deposit {deposit} at booking · Total {total} · Rest {rest} after the treatment",
+    "depositOfOptions": "{percent}% of the selected options, charged at booking",
+    "depositNone": "Nothing is charged at booking: the full price is paid after the treatment",
+    "depositInvalid": "Enter a percentage from 0 to 100",
+    "depositShort": "deposit {amount}"
   },
   "team": {
     "title": "Team & hours",
@@ -391,10 +410,13 @@
     "reviewUrl": "Google review link (empty = no review emails)",
     "reviewDelay": "Ask for a review (hours after the visit)",
     "payments": "Payments",
-    "paymentsEnabled": "Charge online when booking (Stripe)",
-    "paymentsNote": "Needs Stripe keys (phase 6). While off, online bookings are confirmed immediately.",
+    "paymentsEnabled": "Charge online when booking (Square)",
+    "paymentsNote": "Clients pay the deposit (or the full price) on Square’s secure checkout; the booking is confirmed when the payment arrives. While off, online bookings are confirmed immediately and paid at the studio.",
     "integrations": "Integrations",
-    "termsNote": "These values are published in the Terms of service automatically."
+    "termsNote": "These values are published in the Terms of service automatically.",
+    "paymentsNotConfigured": "Square is not set up on this server yet (SQUARE_ACCESS_TOKEN and SQUARE_LOCATION_ID).",
+    "depositPercent": "Deposit at booking (%)",
+    "depositNote": "Charged online to reserve when a treatment has no fixed deposit in the catalog. 100 = full price. The client pays the rest after the treatment."
   },
   "activity": {
     "title": "Activity log",
@@ -420,5 +442,36 @@
     "emailsFailed": "Emails not delivered (7 days)",
     "allGood": "Everything is running smoothly.",
     "recent": "Recent problems"
+  },
+  "payments": {
+    "title": "Payments",
+    "due": "Due online",
+    "paid": "Paid",
+    "refunded": "Refunded",
+    "none": "No online payments.",
+    "awaiting": "Waiting for the client to pay.",
+    "link": "Payment link",
+    "receipt": "Receipt",
+    "refund": "Refund…",
+    "refundTitle": "Refund to the client’s card",
+    "refundIntro": "Up to {amount} can be refunded. The refund goes back to the original card through Square.",
+    "amount": "Amount (USD)",
+    "refundConfirm": "Refund",
+    "refundQueued": "Refund sent to Square. It will show here in a moment.",
+    "refundStatus": {
+      "pending": "processing",
+      "completed": "refunded",
+      "failed": "failed",
+      "rejected": "rejected"
+    },
+    "linkFor": "{amount} · {kind, select, deposit {deposit} balance {balance} other {payment}} · the client only sees it if you send it",
+    "copy": "Copy",
+    "copied": "Copied",
+    "createLink": "Create payment link…",
+    "newLink": "New link for another amount…",
+    "linkTitle": "Payment link for the client",
+    "linkIntro": "Creates a Square checkout link you can send by WhatsApp, text or email. The amount defaults to what is owed now; change it if the final price was adjusted. Any previous unpaid link stops working.",
+    "createAndCopy": "Create and copy",
+    "linkCreated": "Link created and copied to the clipboard."
   }
 }

@@ -3,9 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { getSession } from '@/lib/auth/session';
+import { squareConfig } from '@/lib/payments/square';
 import { createClient } from '@/lib/supabase/server';
 
-export type SettingsResult = { ok: true } | { ok: false; error: 'forbidden' | 'invalid' | 'generic'; field?: string };
+export type SettingsResult = { ok: true } | { ok: false; error: 'forbidden' | 'invalid' | 'generic' | 'payments_not_configured'; field?: string };
 
 const e164 = z.string().regex(/^\+[1-9]\d{6,14}$/);
 const emails = z
@@ -40,6 +41,7 @@ const settingsSchema = z.object({
   reviewUrl: z.url().or(z.literal('')),
   reviewDelayHours: z.coerce.number().int().min(0).max(168),
   paymentsEnabled: z.boolean(),
+  depositPercent: z.coerce.number().int().min(0).max(100),
 });
 
 export type SettingsInput = z.input<typeof settingsSchema>;
@@ -49,6 +51,8 @@ export async function saveSettings(input: SettingsInput): Promise<SettingsResult
   const parsed = settingsSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: 'invalid', field: String(parsed.error.issues[0]?.path[0] ?? '') };
   const v = parsed.data;
+  // Bookings would wait for a payment that cannot be taken
+  if (v.paymentsEnabled && !squareConfig()) return { ok: false, error: 'payments_not_configured' };
 
   const { error } = await (await createClient())
     .from('business_settings')
@@ -76,6 +80,7 @@ export async function saveSettings(input: SettingsInput): Promise<SettingsResult
       review_url: v.reviewUrl || null,
       review_request_delay_hours: v.reviewDelayHours,
       payments_enabled: v.paymentsEnabled,
+      deposit_percent: v.depositPercent,
     })
     .eq('id', 1);
   if (error) return { ok: false, error: 'generic' };

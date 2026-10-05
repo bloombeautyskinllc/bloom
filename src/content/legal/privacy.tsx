@@ -2,7 +2,7 @@ import type { LegalSection } from '@/components/legal/LegalPage';
 import type { PublicSettings } from '@/lib/settings';
 
 // Bump when the text changes materially (shown as "Last updated")
-export const PRIVACY_UPDATED = '2026-09-28';
+export const PRIVACY_UPDATED = '2026-10-02';
 
 export function privacySections(s: PublicSettings): LegalSection[] {
   const address = [s.address_line1, s.address_line2].filter(Boolean).join(', ');
@@ -57,7 +57,7 @@ export function privacySections(s: PublicSettings): LegalSection[] {
           </p>
           <h3>Payment information</h3>
           <p>
-            Payments are processed by Stripe. Your card details go directly to Stripe and are never stored on our
+            Payments are processed by Square. Your card details go directly to Square and are never stored on our
             systems; we only receive the payment status, amount and a reference.
           </p>
           <h3>Google Calendar (optional)</h3>
@@ -137,7 +137,7 @@ export function privacySections(s: PublicSettings): LegalSection[] {
             <li><strong>Vercel</strong>: website hosting.</li>
             <li><strong>Google</strong>: sign-in and, if you connect it, Google Calendar.</li>
             <li><strong>Resend</strong>: delivery of our emails.</li>
-            <li><strong>Stripe</strong>: payment processing.</li>
+            <li><strong>Square</strong>: payment processing.</li>
           </ul>
           <p>
             We may also disclose information when required by law or to protect the rights, property or safety of our

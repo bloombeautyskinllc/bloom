@@ -17,27 +17,25 @@ const questionSchema = z.object({
 /** Active, bookable catalog (public data, RLS: active rows only). */
 export const getBookingCatalog = cache(async (): Promise<BookingCatalog> => {
   const supabase = createPublicClient();
-  const [categories, treatments, options, specialists] = await Promise.all([
+  const { createClient } = await import('@/lib/supabase/server');
+  const [categories, treatments, options, specialists, intakeForms] = await Promise.all([
     supabase.from('service_categories').select('id, slug, name, short_name, description').order('sort_order'),
     supabase
       .from('treatments')
-      .select('id, slug, category_id, name, description, includes, menu_group, price_cents, price_type, duration_minutes, is_best_seller, min_options, max_options, intake_form_id, is_bookable')
+      .select('id, slug, category_id, name, description, includes, menu_group, price_cents, price_type, deposit_cents, deposit_percent, duration_minutes, is_best_seller, min_options, max_options, intake_form_id, is_bookable')
       .eq('is_bookable', true)
       .order('sort_order'),
     supabase.from('treatment_options').select('id, slug, treatment_id, group_label, name, description, price_cents, price_type, extra_duration_minutes').order('sort_order'),
     supabase.from('specialists').select('id', { count: 'exact', head: true }),
+    // Intake forms are only readable when signed in (the booking page always is). The table is small, so
+    // all of them load alongside the treatments instead of in a second round trip
+    createClient().then((client) => client.from('intake_forms').select('id, questions')),
   ]);
   const error = categories.error ?? treatments.error ?? options.error ?? specialists.error;
   if (error) throw new Error(`catalog load failed: ${error.message}`);
 
-  // Intake forms are only readable when signed in; the booking page always is
-  const formIds = [...new Set((treatments.data ?? []).map((t) => t.intake_form_id).filter((id): id is string => Boolean(id)))];
   const forms = new Map<string, IntakeQuestion[]>();
-  if (formIds.length > 0) {
-    const { createClient } = await import('@/lib/supabase/server');
-    const { data } = await (await createClient()).from('intake_forms').select('id, questions').in('id', formIds);
-    for (const f of data ?? []) forms.set(f.id, z.array(questionSchema).catch([]).parse(f.questions));
-  }
+  for (const f of intakeForms.data ?? []) forms.set(f.id, z.array(questionSchema).catch([]).parse(f.questions));
 
   const siteImages = new Map(treatmentCategories.map((c) => [c.slug, c.menuImage]));
   const categorySlug = new Map((categories.data ?? []).map((c) => [c.id, c.slug]));
@@ -69,6 +67,8 @@ export const getBookingCatalog = cache(async (): Promise<BookingCatalog> => {
       menuGroup: t.menu_group,
       priceCents: t.price_cents,
       priceType: t.price_type,
+      depositCents: t.deposit_cents,
+      depositPercent: t.deposit_percent,
       durationMinutes: t.duration_minutes,
       isBestSeller: t.is_best_seller,
       minOptions: t.min_options,

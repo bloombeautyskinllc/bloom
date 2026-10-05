@@ -34,6 +34,7 @@ function detailRows(b: BookingDetails, t: Awaited<ReturnType<typeof translator>>
     [t('details.when'), `${formatDateLong(b.startAt, timeZone)}\n${formatTime(b.startAt, timeZone)}`],
     [t('details.duration'), formatDuration(minutes)],
     [t('details.total'), `${b.isStartingPrice ? 'from ' : ''}${formatMoney(b.totalCents)}`],
+    ...(b.amountPaidCents > 0 ? [[t('details.paid'), formatMoney(b.amountPaidCents)] as [string, string]] : []),
     [t('details.where'), ADDRESS],
     [t('details.reference'), b.code],
   ];
@@ -92,7 +93,10 @@ export async function bookingEmail(job: Job) {
         preview={t(`booking.${key}.preview`, vars)}
         heading={t(`booking.${key}.heading`, vars)}
         intro={t(`booking.${key}.intro`)}
-        details={detailRows(b, t, timezone, event !== 'cancelled')}
+        details={[
+          ...detailRows(b, t, timezone, event !== 'cancelled'),
+          ...(event === 'cancelled' && b.refundDueCents ? [[t('details.refund'), t('details.refundValue', { amount: formatMoney(b.refundDueCents) })] as [string, string]] : []),
+        ]}
         footnote={event === 'cancelled' ? undefined : [b.isStartingPrice ? t('details.startingPrice') : null, t('addToCalendar')].filter(Boolean).join(' ')}
         cta={event === 'cancelled' ? { label: t('booking.bookAgain'), href: `${siteUrl}${routes.booking}` } : { label: t('manage'), href: `${siteUrl}${routes.dashboard}` }}
         footer={t('footer')}

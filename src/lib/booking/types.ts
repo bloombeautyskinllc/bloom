@@ -32,6 +32,10 @@ export type CatalogTreatment = {
   menuGroup: string | null;
   priceCents: number;
   priceType: PriceType;
+  /** Charged online at booking instead of the full price (null = full price) */
+  depositCents: number | null;
+  /** Share of the price charged at booking (null = the business default) */
+  depositPercent: number | null;
   durationMinutes: number;
   isBestSeller: boolean;
   minOptions: number;

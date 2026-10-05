@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 import 'lenis/dist/lenis.css';
 import '../index.css';
 
@@ -31,14 +32,21 @@ export const viewport: Viewport = {
   themeColor: '#31251B',
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+// Only the namespaces client components read: the rest (emails, back office) would otherwise be
+// serialized into every page. The admin layout provides "bo" itself.
+const CLIENT_NAMESPACES = ['login', 'onboarding', 'authModal', 'booking', 'dashboard', 'payment'] as const;
+
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const messages = await getMessages();
+  const clientMessages = Object.fromEntries(CLIENT_NAMESPACES.map((ns) => [ns, messages[ns]]));
+
   return (
     // data-scroll-behavior: Next turns off the CSS smooth scroll while it resets the scroll on navigation,
     // otherwise those resets animate and land mid-page. suppressHydrationWarning (one level deep):
     // extensions such as ColorZilla add attributes to <body> before React hydrates.
     <html lang="en" data-scroll-behavior="smooth" className={`${serif.variable} ${sans.variable}`}>
       <body suppressHydrationWarning>
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider messages={clientMessages}>{children}</NextIntlClientProvider>
       </body>
     </html>
   );

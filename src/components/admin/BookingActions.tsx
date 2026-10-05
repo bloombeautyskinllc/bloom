@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import Modal from '@/components/ui/Modal';
 import { cancelBookingAsStaff, rescheduleBookingAsStaff, setBookingStatus } from '@/lib/admin/actions';
 import { localDate, toLocal } from '@/lib/availability/timezone';
+import { formatMoney } from '@/lib/booking/format';
 import LocalDateTimeInput, { toInstant } from './LocalDateTimeInput';
 import { Notice, buttonClass, inputClass } from './ui';
 
@@ -15,9 +16,11 @@ type Props = {
   startAt: string;
   started: boolean;
   timeZone: string;
+  /** Paid online and not yet refunded, in cents */
+  refundableCents: number;
 };
 
-export default function BookingActions({ bookingId, status, startAt, started, timeZone }: Props) {
+export default function BookingActions({ bookingId, status, startAt, started, timeZone, refundableCents }: Props) {
   const t = useTranslations('bo');
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -26,6 +29,7 @@ export default function BookingActions({ bookingId, status, startAt, started, ti
   const [reason, setReason] = useState('');
   const [notify, setNotify] = useState(true);
   const [override, setOverride] = useState(false);
+  const [refund, setRefund] = useState<'full' | 'policy' | 'none'>('full');
   const local = toLocal(Date.parse(startAt), timeZone);
   const [when, setWhen] = useState({
     date: localDate(Date.parse(startAt), timeZone),
@@ -84,6 +88,17 @@ export default function BookingActions({ bookingId, status, startAt, started, ti
             <label htmlFor="cancel-reason" className="mb-1.5 block text-sm font-medium text-ink">{t('common.reason')}</label>
             <textarea id="cancel-reason" rows={3} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} className={`${inputClass} h-auto py-2`} />
           </div>
+          {refundableCents > 0 && (
+            <fieldset className="flex flex-col gap-2">
+              <legend className="mb-1.5 text-sm font-medium text-ink">{t('booking.refundOnCancel', { amount: formatMoney(refundableCents) })}</legend>
+              {(['full', 'policy', 'none'] as const).map((mode) => (
+                <label key={mode} className="flex items-center gap-2 text-sm text-ink">
+                  <input type="radio" name="refund-mode" checked={refund === mode} onChange={() => setRefund(mode)} className="h-4 w-4 accent-cocoa" />
+                  {t(`booking.refundMode.${mode}`)}
+                </label>
+              ))}
+            </fieldset>
+          )}
           <label className="flex items-center gap-2 text-sm text-ink">
             <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="h-4 w-4 accent-cocoa" />
             {t('common.notifyClient')}
@@ -91,7 +106,7 @@ export default function BookingActions({ bookingId, status, startAt, started, ti
           {notice?.tone === 'error' && <Notice tone="error">{notice.text}</Notice>}
           <div className="flex justify-end gap-2">
             <button type="button" className={buttonClass.ghost} onClick={() => setDialog(null)}>{t('common.cancel')}</button>
-            <button type="button" disabled={pending} className={buttonClass.danger} onClick={() => run(() => cancelBookingAsStaff({ bookingId, reason: reason || undefined, notify }), t('booking.done.cancelled'))}>
+            <button type="button" disabled={pending} className={buttonClass.danger} onClick={() => run(() => cancelBookingAsStaff({ bookingId, reason: reason || undefined, notify, refund }), t('booking.done.cancelled'))}>
               {t('booking.cancelConfirm')}
             </button>
           </div>

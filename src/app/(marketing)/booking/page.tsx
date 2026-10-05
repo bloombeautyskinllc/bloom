@@ -22,9 +22,13 @@ export default async function BookingPage({ searchParams }: { searchParams: Sear
   const raw = await searchParams;
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(raw)) if (typeof value === 'string') params.set(key, value);
-  await requireOnboardedProfile(params.size ? `${routes.booking}?${params.toString()}` : routes.booking);
-
-  const [catalog, settings, t] = await Promise.all([getBookingCatalog(), getPublicSettings(), getTranslations('booking')]);
+  // The guard and the data load run side by side: none of these queries depends on another
+  const [, catalog, settings, t] = await Promise.all([
+    requireOnboardedProfile(params.size ? `${routes.booking}?${params.toString()}` : routes.booking),
+    getBookingCatalog(),
+    getPublicSettings(),
+    getTranslations('booking'),
+  ]);
 
   const treatment = catalog.categories.flatMap((c) => c.treatments).find((x) => x.slug === params.get('treatment')) ?? null;
   const optionSlugs = params.get('options')?.split(',') ?? [];
@@ -53,6 +57,7 @@ export default async function BookingPage({ searchParams }: { searchParams: Sear
                 maxReschedules: settings.max_reschedules,
                 refundPercent: settings.cancellation_refund_percent,
                 paymentsEnabled: settings.payments_enabled,
+                depositPercent: settings.deposit_percent,
               }}
               initial={initial}
             />

@@ -8,7 +8,7 @@ import DateTimePicker from '@/components/booking/DateTimePicker';
 import QueryProvider from '@/components/booking/QueryProvider';
 import Modal from '@/components/ui/Modal';
 import { site } from '@/data/site';
-import { cancelBooking, rescheduleBooking } from '@/lib/booking/actions';
+import { cancelBooking, rescheduleBooking, startPayment } from '@/lib/booking/actions';
 import { formatDateLong, formatDuration, formatMoney, formatTime } from '@/lib/booking/format';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +20,14 @@ export type DashboardBooking = {
   startAt: string;
   endAt: string;
   totalCents: number;
+  amountDueCents: number;
+  amountPaidCents: number;
+  amountRefundedCents: number;
+  /** Pending payment: the time is released at this instant */
+  payBy: string | null;
+  /** Price minus what was paid online (net of refunds) */
+  balanceCents: number;
+  canPayBalance: boolean;
   isStartingPrice: boolean;
   treatmentName: string;
   optionNames: string[];
@@ -74,6 +82,14 @@ export default function BookingCard({ booking, timeZone, maxWindowDays, upcoming
       router.refresh();
     });
 
+  const doPay = () =>
+    startTransition(async () => {
+      setNotice(null);
+      const result = await startPayment({ bookingId: booking.id });
+      if (result.ok) window.location.assign(result.data.url);
+      else setNotice(tb(`errors.${result.error}`));
+    });
+
   const doReschedule = () =>
     newSlot &&
     startTransition(async () => {
@@ -109,9 +125,16 @@ export default function BookingCard({ booking, timeZone, maxWindowDays, upcoming
             {formatMoney(booking.totalCents)}
           </dd>
         </div>
-        {active && (
+        {(active || booking.amountPaidCents > 0) && (
           <div className="flex gap-1.5">
-            <dd className="text-muted">{t(`payment.${booking.paymentStatus}`)}</dd>
+            <dd className="text-muted">
+              {booking.amountPaidCents > booking.amountRefundedCents
+                ? t('paidAmount', { amount: formatMoney(booking.amountPaidCents - booking.amountRefundedCents) })
+                : t(`payment.${booking.paymentStatus}`)}
+              {booking.amountRefundedCents > 0 && ` · ${t('refundedAmount', { amount: formatMoney(booking.amountRefundedCents) })}`}
+              {booking.status === 'confirmed' && booking.amountPaidCents > 0 && booking.balanceCents > 0 && !booking.canPayBalance &&
+                ` · ${t('balanceAfter', { amount: formatMoney(booking.balanceCents) })}`}
+            </dd>
           </div>
         )}
         <div className="flex gap-1.5">
@@ -124,6 +147,26 @@ export default function BookingCard({ booking, timeZone, maxWindowDays, upcoming
         <p role="status" className="mt-4 rounded-xl bg-sand px-4 py-2.5 text-sm text-ink">
           {notice}
         </p>
+      )}
+
+      {upcoming && booking.status === 'pending_payment' && booking.payBy && (
+        <div className="mt-5 flex flex-wrap items-center gap-3 rounded-2xl bg-sand px-4 py-3">
+          <p className="min-w-[200px] flex-1 text-sm text-ink">
+            {t('payToConfirm', { amount: formatMoney(booking.amountDueCents - booking.amountPaidCents), time: formatTime(booking.payBy, timeZone) })}
+          </p>
+          <button type="button" onClick={doPay} disabled={pending} className="rounded-full bg-cocoa px-4 py-2 text-sm font-medium text-cream transition hover:bg-ink disabled:opacity-60">
+            {pending ? t('actions.redirecting') : t('actions.pay')}
+          </button>
+        </div>
+      )}
+
+      {booking.canPayBalance && (
+        <div className="mt-5 flex flex-wrap items-center gap-3 rounded-2xl bg-sand px-4 py-3">
+          <p className="min-w-[200px] flex-1 text-sm text-ink">{t('payBalance', { amount: formatMoney(booking.balanceCents) })}</p>
+          <button type="button" onClick={doPay} disabled={pending} className="rounded-full bg-cocoa px-4 py-2 text-sm font-medium text-cream transition hover:bg-ink disabled:opacity-60">
+            {pending ? t('actions.redirecting') : t('actions.payBalance')}
+          </button>
+        </div>
       )}
 
       {upcoming && active && (
@@ -160,7 +203,7 @@ export default function BookingCard({ booking, timeZone, maxWindowDays, upcoming
       )}
 
       <Modal open={dialog === 'cancel'} onOpenChange={(o) => !o && close()} title={t('cancelDialog.title')} description={t('cancelDialog.body', { treatment: booking.treatmentName, date, time })}>
-        {booking.refundPercent !== null && booking.paymentStatus === 'paid' && (
+        {booking.refundPercent !== null && booking.amountPaidCents > booking.amountRefundedCents && (
           <p className="mb-4 text-sm text-ink">{t('cancelDialog.refund', { percent: booking.refundPercent })}</p>
         )}
         <label htmlFor={`reason-${booking.id}`} className="mb-2 block text-sm font-medium text-ink">

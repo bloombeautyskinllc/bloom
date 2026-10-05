@@ -1,11 +1,10 @@
-'use client';
-
 import type { ElementType } from 'react';
 import SectionLabel from '../components/ui/SectionLabel';
 import Flower from '../components/ui/Flower';
 import Testimonials from '../components/home/Testimonials';
 import Reveal from '../components/motion/Reveal';
 import SplitText from '../components/motion/SplitText';
+import Parallax from '../components/motion/Parallax';
 import ParallaxImage from '../components/motion/ParallaxImage';
 import GlowOrb from '../components/decor/GlowOrb';
 import Sparkles from '../components/decor/Sparkles';
@@ -15,7 +14,6 @@ import Link from 'next/link';
 import { routes, site } from '../data/site';
 import { treatmentCategories } from '../data/treatments';
 import { findTreatmentPage, type MenuGroup, type MenuItem, type SplitHeading, type TreatmentPage as Page } from '../data/treatmentPages';
-import { useParallax } from '../hooks/useParallax';
 
 type HeadingProps = {
   as: ElementType;
@@ -44,11 +42,9 @@ function bookingHref(item: MenuItem) {
 }
 
 function Hero({ hero }: { hero: Page['hero'] }) {
-  const photoRef = useParallax<HTMLDivElement>(0.3, 'top');
-
   return (
     <section className="relative isolate flex min-h-[640px] items-center overflow-hidden bg-[#8C7462] lg:h-[clamp(700px,48.6vw,100svh)]">
-      <div ref={photoRef} className="parallax absolute inset-0 -z-20">
+      <Parallax speed={0.3} anchor="top" className="absolute inset-0 -z-20">
         {/* Landscape photo from tablet up; phones keep the portrait crop */}
         <picture className="block h-full w-full">
           {hero.imageWide && <source media="(min-width: 768px)" srcSet={hero.imageWide} sizes="100vw" />}
@@ -61,7 +57,7 @@ function Hero({ hero }: { hero: Page['hero'] }) {
             }`}
           />
         </picture>
-      </div>
+      </Parallax>
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-ink/45 via-[#5F4C3C]/35 to-ink/45" />
       <GlowOrb className="left-[calc(50%-350px)] top-[10%] h-[700px] w-[700px] mix-blend-soft-light" color="rgba(250, 238, 222, 0.85)" />
       <Sparkles

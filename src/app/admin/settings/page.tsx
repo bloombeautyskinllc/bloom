@@ -55,6 +55,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             reviewUrl: s.review_url ?? '',
             reviewDelayHours: s.review_request_delay_hours,
             paymentsEnabled: s.payments_enabled,
+            depositPercent: s.deposit_percent,
           }}
         />
 

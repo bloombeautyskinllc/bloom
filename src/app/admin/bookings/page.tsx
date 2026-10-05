@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { PageHeader, StatusBadge, buttonClass, inputClass } from '@/components/admin/ui';
-import { BOOKING_STATUSES, PAYMENT_STATUSES, bookingFiltersSchema, queryBookings } from '@/lib/admin/bookings-query';
+import { BOOKING_SORTS, BOOKING_STATUSES, PAYMENT_STATUSES, bookingFiltersSchema, queryBookings, type BookingSort } from '@/lib/admin/bookings-query';
 import { startOfLocalDay } from '@/lib/admin/time';
 import { addDays } from '@/lib/availability/timezone';
 import { requireStaff } from '@/lib/auth/session';
@@ -13,6 +13,14 @@ import { createClient } from '@/lib/supabase/server';
 export const metadata = { title: 'Bookings' };
 
 const PAGE_SIZE = 50;
+
+// Sortable columns: first click uses the natural direction, the next one reverses it
+const COLUMN_SORT: Partial<Record<string, [BookingSort, BookingSort]>> = {
+  booked: ['created_desc', 'created_asc'],
+  when: ['start_asc', 'start_desc'],
+  client: ['client_asc', 'client_asc'],
+  total: ['total_desc', 'total_asc'],
+};
 
 export default async function BookingsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   await requireStaff('/admin/bookings');
@@ -36,6 +44,12 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
   if (error) throw new Error(error.message);
 
   const params = new URLSearchParams(Object.entries(raw).filter(([k, v]) => v && k !== 'page') as [string, string][]);
+  const sortHref = (column: string) => {
+    const [first, second] = COLUMN_SORT[column]!;
+    const next = new URLSearchParams(params);
+    next.set('sort', filters.sort === first ? second : first);
+    return `/admin/bookings?${next.toString()}`;
+  };
   const pageHref = (p: number) => `/admin/bookings?${new URLSearchParams({ ...Object.fromEntries(params), page: String(p) }).toString()}`;
 
   return (
@@ -86,6 +100,13 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
             </option>
           ))}
         </select>
+        <select name="sort" defaultValue={filters.sort} aria-label={t('bookings.sortBy')} className={inputClass}>
+          {BOOKING_SORTS.map((s) => (
+            <option key={s} value={s}>
+              {t('bookings.sortBy')}: {t(`bookings.sort.${s}`)}
+            </option>
+          ))}
+        </select>
         {(specialists?.length ?? 0) > 1 && (
           <select name="specialist" defaultValue={filters.specialist ?? ''} aria-label={t('bookings.specialist')} className={inputClass}>
             <option value="">{t('bookings.specialist')}: {t('common.all')}</option>
@@ -107,26 +128,41 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
       </form>
 
       <div className="overflow-x-auto rounded-2xl border border-stone bg-cream">
-        <table className="w-full min-w-[860px] text-left text-sm">
+        <table className="w-full min-w-[960px] text-left text-sm">
           <thead className="border-b border-stone text-xs uppercase tracking-[0.1em] text-bronze">
             <tr>
-              {(['when', 'client', 'service', 'total', 'status', 'payment', 'ref'] as const).map((c) => (
-                <th key={c} scope="col" className="px-4 py-3 font-semibold">
-                  {t(`bookings.columns.${c}`)}
-                </th>
-              ))}
+              {(['booked', 'when', 'client', 'service', 'total', 'status', 'payment', 'ref'] as const).map((c) => {
+                const sorts = COLUMN_SORT[c];
+                const active = sorts?.includes(filters.sort);
+                return (
+                  <th key={c} scope="col" className="px-4 py-3 font-semibold" aria-sort={active ? (filters.sort.endsWith('_asc') ? 'ascending' : 'descending') : undefined}>
+                    {sorts ? (
+                      <Link href={sortHref(c)} className={active ? 'text-ink' : 'hover:text-ink'}>
+                        {t(`bookings.columns.${c}`)}
+                        {active && (filters.sort.endsWith('_asc') ? ' ↑' : ' ↓')}
+                      </Link>
+                    ) : (
+                      t(`bookings.columns.${c}`)
+                    )}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody className="divide-y divide-stone">
             {rows?.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-muted">
+                <td colSpan={8} className="px-4 py-8 text-center text-muted">
                   {t('common.noResults')}
                 </td>
               </tr>
             )}
             {rows?.map((b) => (
               <tr key={b.id} className="transition hover:bg-sand/60">
+                <td className="whitespace-nowrap px-4 py-3 text-muted">
+                  {formatDateShort(b.created_at!, tz)}
+                  <span className="block text-xs">{formatTime(b.created_at!, tz)}</span>
+                </td>
                 <td className="whitespace-nowrap px-4 py-3">
                   <Link href={`/admin/bookings/${b.id}`} className="font-medium text-ink hover:underline">
                     {formatDateShort(b.start_at!, tz)}

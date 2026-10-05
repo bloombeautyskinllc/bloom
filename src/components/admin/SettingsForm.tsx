@@ -38,7 +38,7 @@ export default function SettingsForm({ initial }: { initial: Values }) {
           if (r.ok) {
             setMessage({ tone: 'success', text: t('common.saved') });
             router.refresh();
-          } else setMessage({ tone: 'error', text: r.error === 'invalid' ? `${t('common.error')} (${r.field})` : r.error === 'forbidden' ? t('common.forbidden') : t('common.error') });
+          } else setMessage({ tone: 'error', text: r.error === 'invalid' ? `${t('common.error')} (${r.field})` : r.error === 'forbidden' ? t('common.forbidden') : r.error === 'payments_not_configured' ? t('settings.paymentsNotConfigured') : t('common.error') });
         });
       }}
     >
@@ -88,6 +88,8 @@ export default function SettingsForm({ initial }: { initial: Values }) {
       <Panel title={t('settings.payments')}>
         {check('paymentsEnabled', t('settings.paymentsEnabled'))}
         <p className="mt-2 text-xs text-muted">{t('settings.paymentsNote')}</p>
+        <div className="mt-3 max-w-xs">{text('depositPercent', t('settings.depositPercent'), { ...num, max: 100 })}</div>
+        <p className="mt-1 text-xs text-muted">{t('settings.depositNote')}</p>
       </Panel>
 
       <div className="sticky bottom-4 z-10 flex flex-wrap items-center gap-3 rounded-2xl border border-stone bg-cream/95 p-3 shadow-soft backdrop-blur">

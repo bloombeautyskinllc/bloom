@@ -2,6 +2,7 @@ import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { bookingEmail, reminderEmail, reviewRequestEmail, staffBookingEmail, staffTaskFailedEmail } from './handlers/booking-emails';
 import { calendarPull, calendarRenewWatch, calendarSync } from './handlers/calendar';
+import { paymentRefund, paymentsReconcile } from './handlers/payments';
 import { welcomeEmail } from './handlers/welcome-email';
 import type { JobHandler } from './types';
 
@@ -15,6 +16,8 @@ const handlers: Record<string, JobHandler> = {
   'calendar.sync': calendarSync,
   'calendar.pull': calendarPull,
   'calendar.renew_watch': calendarRenewWatch,
+  'payments.reconcile': paymentsReconcile,
+  'payment.refund': paymentRefund,
 };
 
 export type JobResult = { id: string; type: string; ok: boolean; error?: string };

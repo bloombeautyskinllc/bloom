@@ -62,7 +62,7 @@
       "unpaid": "Pay at the studio",
       "pending": "Payment pending",
       "paid": "Paid",
-      "partially_paid": "Partially paid",
+      "partially_paid": "Deposit paid",
       "refunded": "Refunded",
       "failed": "Payment failed"
     },
@@ -71,7 +71,10 @@
       "cancel": "Cancel",
       "addToGoogle": "Add to Google Calendar",
       "downloadIcs": "Download .ics",
-      "contact": "Contact us on WhatsApp"
+      "contact": "Contact us on WhatsApp",
+      "pay": "Complete payment",
+      "redirecting": "Opening checkout…",
+      "payBalance": "Pay balance"
     },
     "policyClosed": "Changes are no longer possible online for this appointment.",
     "reschedulesLeft": "{count, plural, =0 {No reschedules left} one {# reschedule left} other {# reschedules left}}",
@@ -104,7 +107,14 @@
       "confirm": "Yes, delete my account",
       "keep": "Keep my account",
       "deleting": "Deleting…"
-    }
+    },
+    "bookedPendingPayment": "Almost done! Complete the payment to confirm your appointment {code}.",
+    "paidAmount": "Paid {amount}",
+    "refundedAmount": "Refunded {amount}",
+    "payToConfirm": "Pay {amount} by {time} to confirm this appointment. After that, the time is released.",
+    "paidThanks": "Thank you! We received your payment for {code}.",
+    "balanceAfter": "{amount} due after your treatment",
+    "payBalance": "Remaining balance: {amount}. You can pay it online now."
   },
   "email": {
     "welcome": {
@@ -125,7 +135,10 @@
       "reference": "Reference",
       "where": "Where",
       "notes": "Your notes",
-      "startingPrice": "Starting price. Your final price is confirmed at your consultation."
+      "startingPrice": "Starting price. Your final price is confirmed at your consultation.",
+      "paid": "Paid online",
+      "refund": "Refund",
+      "refundValue": "{amount} to your original payment method (5 to 10 business days)"
     },
     "manage": "Manage your appointment",
     "addToCalendar": "The attached invitation adds it to your calendar.",
@@ -279,7 +292,17 @@
       "intakeTitle": "Before your visit",
       "required": "Required",
       "yes": "Yes",
-      "no": "No"
+      "no": "No",
+      "dueNow": "Due now",
+      "paymentNote": "You’ll pay on Square’s secure checkout. Your appointment is confirmed as soon as the payment goes through.",
+      "submitPay": "Continue to payment · {amount}",
+      "redirecting": "Opening secure checkout…",
+      "payChoice": "How would you like to pay?",
+      "payDeposit": "Pay the deposit · {amount} now",
+      "payLater": "Pay after your treatment",
+      "payDepositHint": "The remaining {amount} is paid after your treatment, online or at the studio.",
+      "payFull": "Pay in full · {amount} now",
+      "payFullHint": "Nothing left to pay after your treatment."
     },
     "summary": {
       "title": "Your booking",
@@ -309,7 +332,9 @@
       "outside_policy": "It’s too close to your appointment to change it online. Please contact us and we’ll do our best to help.",
       "max_reschedules": "This booking has reached the maximum number of reschedules. Please contact us to change it.",
       "invalid_request": "Something doesn’t look right. Please try again.",
-      "generic": "Something went wrong. Please try again."
+      "generic": "Something went wrong. Please try again.",
+      "not_payable": "This booking can no longer be paid online: your reserved time has run out. Please book again.",
+      "payments_unavailable": "We couldn’t open the secure checkout. Your time is still reserved: please try again in a moment."
     }
   },
   "calendar": {
@@ -336,5 +361,27 @@
       "missing_permission": "Please allow calendar access to connect it.",
       "error": "We couldn’t connect Google Calendar. Please try again."
     }
+  },
+  "payment": {
+    "metaTitle": "Payment",
+    "label": "Payment",
+    "lead": "Your",
+    "accent": {
+      "pending": "payment.",
+      "released": "booking."
+    },
+    "pending": {
+      "checking": "We’re confirming your payment with Square. This usually takes a few seconds…",
+      "notYet": "We haven’t received your payment yet. If you closed the checkout, you can open it again: your time is still reserved for a few minutes."
+    },
+    "released": {
+      "unpaid": "Your reserved time ran out before the payment was completed, so it was released. You can book again whenever you like.",
+      "refunding": "Your payment arrived after your reserved time ran out and the time is no longer available, so we’re refunding it in full (booking {code}). Refunds usually appear on your statement within 5 to 10 business days.",
+      "refunded": "Your payment arrived after your reserved time ran out and the time is no longer available. We refunded {amount} (booking {code}). Refunds usually appear on your statement within 5 to 10 business days."
+    },
+    "payNow": "Open checkout again",
+    "redirecting": "Opening checkout…",
+    "bookAgain": "Book again",
+    "toDashboard": "Go to my appointments"
   }
 }

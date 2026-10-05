@@ -143,13 +143,13 @@ isOneToOne: false
                   ]
                 },"bookings": {
                   Row: {
-                    "adjustment_cents": number,"amount_due_cents": number,"blocked_range": unknown,"buffer_after_min": number,"buffer_before_min": number,"cancellation_reason": string | null,"cancelled_at": string | null,"cancelled_by": string | null,"client_id": string,"client_notes": string | null,"closure_flagged_at": string | null,"code": string,"confirmed_at": string | null,"created_at": string,"created_by": string | null,"currency": string,"discount_cents": number,"end_at": string,"hold_expires_at": string | null,"id": string,"idempotency_key": string | null,"override_reason": string | null,"payment_status": Database["public"]['Enums']["payment_status"],"policy": NonNullable<Json>,"refund_due_cents": number | null,"reschedule_count": number,"rules_overridden": boolean,"source": Database["public"]['Enums']["booking_source"],"specialist_id": string,"start_at": string,"status": Database["public"]['Enums']["booking_status"],"subtotal_cents": number,"total_cents": number,"updated_at": string
+                    "adjustment_cents": number,"amount_due_cents": number,"amount_paid_cents": number,"amount_refunded_cents": number,"blocked_range": unknown,"buffer_after_min": number,"buffer_before_min": number,"cancellation_reason": string | null,"cancelled_at": string | null,"cancelled_by": string | null,"client_id": string,"client_notes": string | null,"closure_flagged_at": string | null,"code": string,"confirmed_at": string | null,"created_at": string,"created_by": string | null,"currency": string,"discount_cents": number,"end_at": string,"hold_expires_at": string | null,"id": string,"idempotency_key": string | null,"override_reason": string | null,"payment_status": Database["public"]['Enums']["payment_status"],"policy": NonNullable<Json>,"refund_due_cents": number | null,"reschedule_count": number,"rules_overridden": boolean,"source": Database["public"]['Enums']["booking_source"],"specialist_id": string,"start_at": string,"status": Database["public"]['Enums']["booking_status"],"subtotal_cents": number,"total_cents": number,"updated_at": string
                   }
                   Insert: {
-                    "adjustment_cents"?: number,"amount_due_cents"?: number,"blocked_range": unknown,"buffer_after_min"?: number,"buffer_before_min"?: number,"cancellation_reason"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"client_id": string,"client_notes"?: string | null,"closure_flagged_at"?: string | null,"code"?: string,"confirmed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"discount_cents"?: number,"end_at": string,"hold_expires_at"?: string | null,"id"?: string,"idempotency_key"?: string | null,"override_reason"?: string | null,"payment_status"?: Database["public"]['Enums']["payment_status"],"policy"?: NonNullable<Json>,"refund_due_cents"?: number | null,"reschedule_count"?: number,"rules_overridden"?: boolean,"source"?: Database["public"]['Enums']["booking_source"],"specialist_id": string,"start_at": string,"status"?: Database["public"]['Enums']["booking_status"],"subtotal_cents": number,"total_cents": number,"updated_at"?: string
+                    "adjustment_cents"?: number,"amount_due_cents"?: number,"amount_paid_cents"?: number,"amount_refunded_cents"?: number,"blocked_range": unknown,"buffer_after_min"?: number,"buffer_before_min"?: number,"cancellation_reason"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"client_id": string,"client_notes"?: string | null,"closure_flagged_at"?: string | null,"code"?: string,"confirmed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"discount_cents"?: number,"end_at": string,"hold_expires_at"?: string | null,"id"?: string,"idempotency_key"?: string | null,"override_reason"?: string | null,"payment_status"?: Database["public"]['Enums']["payment_status"],"policy"?: NonNullable<Json>,"refund_due_cents"?: number | null,"reschedule_count"?: number,"rules_overridden"?: boolean,"source"?: Database["public"]['Enums']["booking_source"],"specialist_id": string,"start_at": string,"status"?: Database["public"]['Enums']["booking_status"],"subtotal_cents": number,"total_cents": number,"updated_at"?: string
                   }
                   Update: {
-                    "adjustment_cents"?: number,"amount_due_cents"?: number,"blocked_range"?: unknown,"buffer_after_min"?: number,"buffer_before_min"?: number,"cancellation_reason"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"client_id"?: string,"client_notes"?: string | null,"closure_flagged_at"?: string | null,"code"?: string,"confirmed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"discount_cents"?: number,"end_at"?: string,"hold_expires_at"?: string | null,"id"?: string,"idempotency_key"?: string | null,"override_reason"?: string | null,"payment_status"?: Database["public"]['Enums']["payment_status"],"policy"?: NonNullable<Json>,"refund_due_cents"?: number | null,"reschedule_count"?: number,"rules_overridden"?: boolean,"source"?: Database["public"]['Enums']["booking_source"],"specialist_id"?: string,"start_at"?: string,"status"?: Database["public"]['Enums']["booking_status"],"subtotal_cents"?: number,"total_cents"?: number,"updated_at"?: string
+                    "adjustment_cents"?: number,"amount_due_cents"?: number,"amount_paid_cents"?: number,"amount_refunded_cents"?: number,"blocked_range"?: unknown,"buffer_after_min"?: number,"buffer_before_min"?: number,"cancellation_reason"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"client_id"?: string,"client_notes"?: string | null,"closure_flagged_at"?: string | null,"code"?: string,"confirmed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"discount_cents"?: number,"end_at"?: string,"hold_expires_at"?: string | null,"id"?: string,"idempotency_key"?: string | null,"override_reason"?: string | null,"payment_status"?: Database["public"]['Enums']["payment_status"],"policy"?: NonNullable<Json>,"refund_due_cents"?: number | null,"reschedule_count"?: number,"rules_overridden"?: boolean,"source"?: Database["public"]['Enums']["booking_source"],"specialist_id"?: string,"start_at"?: string,"status"?: Database["public"]['Enums']["booking_status"],"subtotal_cents"?: number,"total_cents"?: number,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -198,13 +198,13 @@ isOneToOne: false
                   ]
                 },"business_settings": {
                   Row: {
-                    "address_line1": string | null,"address_line2": string | null,"admin_alert_emails": (string)[],"business_name": string,"cancel_cutoff_hours": number,"cancellation_refund_percent": number,"created_at": string,"hold_minutes": number,"id": number,"late_cancellation_refund_percent": number,"legal_name": string,"max_reschedules": number,"max_window_days": number,"min_notice_min": number,"minors_allowed_with_guardian": boolean,"payments_enabled": boolean,"phone_e164": string | null,"privacy_email": string,"public_email": string | null,"reminder_offsets_min": (number)[],"reschedule_cutoff_hours": number,"review_request_delay_hours": number,"review_url": string | null,"slot_interval_min": number,"terms_version": string,"timezone": string,"updated_at": string,"whatsapp_e164": string | null
+                    "address_line1": string | null,"address_line2": string | null,"admin_alert_emails": (string)[],"business_name": string,"cancel_cutoff_hours": number,"cancellation_refund_percent": number,"deposit_percent": number,"created_at": string,"hold_minutes": number,"id": number,"late_cancellation_refund_percent": number,"legal_name": string,"max_reschedules": number,"max_window_days": number,"min_notice_min": number,"minors_allowed_with_guardian": boolean,"payments_enabled": boolean,"phone_e164": string | null,"privacy_email": string,"public_email": string | null,"reminder_offsets_min": (number)[],"reschedule_cutoff_hours": number,"review_request_delay_hours": number,"review_url": string | null,"slot_interval_min": number,"terms_version": string,"timezone": string,"updated_at": string,"whatsapp_e164": string | null
                   }
                   Insert: {
-                    "address_line1"?: string | null,"address_line2"?: string | null,"admin_alert_emails"?: (string)[],"business_name": string,"cancel_cutoff_hours"?: number,"cancellation_refund_percent"?: number,"created_at"?: string,"hold_minutes"?: number,"id"?: number,"late_cancellation_refund_percent"?: number,"legal_name"?: string,"max_reschedules"?: number,"max_window_days"?: number,"min_notice_min"?: number,"minors_allowed_with_guardian"?: boolean,"payments_enabled"?: boolean,"phone_e164"?: string | null,"privacy_email"?: string,"public_email"?: string | null,"reminder_offsets_min"?: (number)[],"reschedule_cutoff_hours"?: number,"review_request_delay_hours"?: number,"review_url"?: string | null,"slot_interval_min"?: number,"terms_version"?: string,"timezone"?: string,"updated_at"?: string,"whatsapp_e164"?: string | null
+                    "address_line1"?: string | null,"address_line2"?: string | null,"admin_alert_emails"?: (string)[],"business_name": string,"cancel_cutoff_hours"?: number,"cancellation_refund_percent"?: number,"deposit_percent"?: number,"created_at"?: string,"hold_minutes"?: number,"id"?: number,"late_cancellation_refund_percent"?: number,"legal_name"?: string,"max_reschedules"?: number,"max_window_days"?: number,"min_notice_min"?: number,"minors_allowed_with_guardian"?: boolean,"payments_enabled"?: boolean,"phone_e164"?: string | null,"privacy_email"?: string,"public_email"?: string | null,"reminder_offsets_min"?: (number)[],"reschedule_cutoff_hours"?: number,"review_request_delay_hours"?: number,"review_url"?: string | null,"slot_interval_min"?: number,"terms_version"?: string,"timezone"?: string,"updated_at"?: string,"whatsapp_e164"?: string | null
                   }
                   Update: {
-                    "address_line1"?: string | null,"address_line2"?: string | null,"admin_alert_emails"?: (string)[],"business_name"?: string,"cancel_cutoff_hours"?: number,"cancellation_refund_percent"?: number,"created_at"?: string,"hold_minutes"?: number,"id"?: number,"late_cancellation_refund_percent"?: number,"legal_name"?: string,"max_reschedules"?: number,"max_window_days"?: number,"min_notice_min"?: number,"minors_allowed_with_guardian"?: boolean,"payments_enabled"?: boolean,"phone_e164"?: string | null,"privacy_email"?: string,"public_email"?: string | null,"reminder_offsets_min"?: (number)[],"reschedule_cutoff_hours"?: number,"review_request_delay_hours"?: number,"review_url"?: string | null,"slot_interval_min"?: number,"terms_version"?: string,"timezone"?: string,"updated_at"?: string,"whatsapp_e164"?: string | null
+                    "address_line1"?: string | null,"address_line2"?: string | null,"admin_alert_emails"?: (string)[],"business_name"?: string,"cancel_cutoff_hours"?: number,"cancellation_refund_percent"?: number,"deposit_percent"?: number,"created_at"?: string,"hold_minutes"?: number,"id"?: number,"late_cancellation_refund_percent"?: number,"legal_name"?: string,"max_reschedules"?: number,"max_window_days"?: number,"min_notice_min"?: number,"minors_allowed_with_guardian"?: boolean,"payments_enabled"?: boolean,"phone_e164"?: string | null,"privacy_email"?: string,"public_email"?: string | null,"reminder_offsets_min"?: (number)[],"reschedule_cutoff_hours"?: number,"review_request_delay_hours"?: number,"review_url"?: string | null,"slot_interval_min"?: number,"terms_version"?: string,"timezone"?: string,"updated_at"?: string,"whatsapp_e164"?: string | null
                   }
                   Relationships: [
                     
@@ -490,6 +490,75 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"payment_links": {
+                  Row: {
+                    "amount_cents": number,"booking_id": string,"cancelled_at": string | null,"created_at": string,"currency": string,"id": string,"kind": string,"paid_at": string | null,"provider": string,"provider_link_id": string,"provider_order_id": string,"status": Database["public"]['Enums']["link_status"],"updated_at": string,"url": string
+                  }
+                  Insert: {
+                    "amount_cents": number,"booking_id": string,"cancelled_at"?: string | null,"created_at"?: string,"currency"?: string,"id"?: string,"kind"?: string,"paid_at"?: string | null,"provider"?: string,"provider_link_id": string,"provider_order_id": string,"status"?: Database["public"]['Enums']["link_status"],"updated_at"?: string,"url": string
+                  }
+                  Update: {
+                    "amount_cents"?: number,"booking_id"?: string,"cancelled_at"?: string | null,"created_at"?: string,"currency"?: string,"id"?: string,"kind"?: string,"paid_at"?: string | null,"provider"?: string,"provider_link_id"?: string,"provider_order_id"?: string,"status"?: Database["public"]['Enums']["link_status"],"updated_at"?: string,"url"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payment_links_booking_id_fkey"
+      columns: ["booking_id"]
+isOneToOne: false
+      referencedRelation: "bookings"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"payments": {
+                  Row: {
+                    "amount_cents": number,"booking_id": string,"card_brand": string | null,"card_last4": string | null,"created_at": string,"currency": string,"id": string,"paid_at": string,"provider": string,"provider_order_id": string | null,"provider_payment_id": string,"receipt_url": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "amount_cents": number,"booking_id": string,"card_brand"?: string | null,"card_last4"?: string | null,"created_at"?: string,"currency"?: string,"id"?: string,"paid_at"?: string,"provider"?: string,"provider_order_id"?: string | null,"provider_payment_id": string,"receipt_url"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "amount_cents"?: number,"booking_id"?: string,"card_brand"?: string | null,"card_last4"?: string | null,"created_at"?: string,"currency"?: string,"id"?: string,"paid_at"?: string,"provider"?: string,"provider_order_id"?: string | null,"provider_payment_id"?: string,"receipt_url"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payments_booking_id_fkey"
+      columns: ["booking_id"]
+isOneToOne: false
+      referencedRelation: "bookings"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"refunds": {
+                  Row: {
+                    "amount_cents": number,"booking_id": string,"created_at": string,"id": string,"payment_id": string,"provider_refund_id": string,"reason": string | null,"requested_by": string | null,"status": Database["public"]['Enums']["refund_status"],"updated_at": string
+                  }
+                  Insert: {
+                    "amount_cents": number,"booking_id": string,"created_at"?: string,"id"?: string,"payment_id": string,"provider_refund_id": string,"reason"?: string | null,"requested_by"?: string | null,"status"?: Database["public"]['Enums']["refund_status"],"updated_at"?: string
+                  }
+                  Update: {
+                    "amount_cents"?: number,"booking_id"?: string,"created_at"?: string,"id"?: string,"payment_id"?: string,"provider_refund_id"?: string,"reason"?: string | null,"requested_by"?: string | null,"status"?: Database["public"]['Enums']["refund_status"],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "refunds_booking_id_fkey"
+      columns: ["booking_id"]
+isOneToOne: false
+      referencedRelation: "bookings"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "refunds_payment_id_fkey"
+      columns: ["payment_id"]
+isOneToOne: false
+      referencedRelation: "payments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "refunds_requested_by_fkey"
+      columns: ["requested_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"profiles": {
                   Row: {
                     "anonymized_at": string | null,"avatar_url": string | null,"created_at": string,"deleted_at": string | null,"email": string | null,"full_name": string | null,"id": string,"locale": string,"onboarded_at": string | null,"phone_e164": string | null,"reminders_opt_in": boolean,"role": Database["public"]['Enums']["user_role"],"terms_accepted_at": string | null,"terms_version": string | null,"updated_at": string,"user_id": string | null
@@ -587,13 +656,13 @@ isOneToOne: false
                   ]
                 },"treatments": {
                   Row: {
-                    "buffer_after_min": number,"buffer_before_min": number,"category_id": string,"created_at": string,"currency": string,"deleted_at": string | null,"deposit_cents": number | null,"description": string | null,"duration_minutes": number | null,"id": string,"includes": (string)[],"intake_form_id": string | null,"is_active": boolean,"is_best_seller": boolean,"is_bookable": boolean | null,"max_options": number | null,"menu_group": string | null,"min_options": number,"name": string,"needs_review": boolean,"price_cents": number,"price_type": Database["public"]['Enums']["price_type"],"slug": string,"sort_order": number,"updated_at": string
+                    "buffer_after_min": number,"buffer_before_min": number,"category_id": string,"created_at": string,"currency": string,"deleted_at": string | null,"deposit_cents": number | null,"deposit_percent": number | null,"description": string | null,"duration_minutes": number | null,"id": string,"includes": (string)[],"intake_form_id": string | null,"is_active": boolean,"is_best_seller": boolean,"is_bookable": boolean | null,"max_options": number | null,"menu_group": string | null,"min_options": number,"name": string,"needs_review": boolean,"price_cents": number,"price_type": Database["public"]['Enums']["price_type"],"slug": string,"sort_order": number,"updated_at": string
                   }
                   Insert: {
-                    "buffer_after_min"?: number,"buffer_before_min"?: number,"category_id": string,"created_at"?: string,"currency"?: string,"deleted_at"?: string | null,"deposit_cents"?: number | null,"description"?: string | null,"duration_minutes"?: number | null,"id"?: string,"includes"?: (string)[],"intake_form_id"?: string | null,"is_active"?: boolean,"is_best_seller"?: boolean,"is_bookable"?: never,"max_options"?: number | null,"menu_group"?: string | null,"min_options"?: number,"name": string,"needs_review"?: boolean,"price_cents": number,"price_type"?: Database["public"]['Enums']["price_type"],"slug": string,"sort_order"?: number,"updated_at"?: string
+                    "buffer_after_min"?: number,"buffer_before_min"?: number,"category_id": string,"created_at"?: string,"currency"?: string,"deleted_at"?: string | null,"deposit_cents"?: number | null,"deposit_percent"?: number | null,"description"?: string | null,"duration_minutes"?: number | null,"id"?: string,"includes"?: (string)[],"intake_form_id"?: string | null,"is_active"?: boolean,"is_best_seller"?: boolean,"is_bookable"?: never,"max_options"?: number | null,"menu_group"?: string | null,"min_options"?: number,"name": string,"needs_review"?: boolean,"price_cents": number,"price_type"?: Database["public"]['Enums']["price_type"],"slug": string,"sort_order"?: number,"updated_at"?: string
                   }
                   Update: {
-                    "buffer_after_min"?: number,"buffer_before_min"?: number,"category_id"?: string,"created_at"?: string,"currency"?: string,"deleted_at"?: string | null,"deposit_cents"?: number | null,"description"?: string | null,"duration_minutes"?: number | null,"id"?: string,"includes"?: (string)[],"intake_form_id"?: string | null,"is_active"?: boolean,"is_best_seller"?: boolean,"is_bookable"?: never,"max_options"?: number | null,"menu_group"?: string | null,"min_options"?: number,"name"?: string,"needs_review"?: boolean,"price_cents"?: number,"price_type"?: Database["public"]['Enums']["price_type"],"slug"?: string,"sort_order"?: number,"updated_at"?: string
+                    "buffer_after_min"?: number,"buffer_before_min"?: number,"category_id"?: string,"created_at"?: string,"currency"?: string,"deleted_at"?: string | null,"deposit_cents"?: number | null,"deposit_percent"?: number | null,"description"?: string | null,"duration_minutes"?: number | null,"id"?: string,"includes"?: (string)[],"intake_form_id"?: string | null,"is_active"?: boolean,"is_best_seller"?: boolean,"is_bookable"?: never,"max_options"?: number | null,"menu_group"?: string | null,"min_options"?: number,"name"?: string,"needs_review"?: boolean,"price_cents"?: number,"price_type"?: Database["public"]['Enums']["price_type"],"slug"?: string,"sort_order"?: number,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -782,6 +851,12 @@ isOneToOne: false
 "mark_google_credential":
 { Args: { "p_credential_id": string,"p_error"?: string }; Returns: undefined
                            },
+"record_payment":
+{ Args: { "p_amount_cents": number,"p_card_brand"?: string,"p_card_last4"?: string,"p_paid_at"?: string,"p_provider_order_id": string,"p_provider_payment_id": string,"p_receipt_url"?: string }; Returns: string
+                           },
+"record_refund":
+{ Args: { "p_amount_cents": number,"p_provider_payment_id": string,"p_provider_refund_id": string,"p_reason"?: string,"p_requested_by"?: string,"p_status": Database["public"]['Enums']["refund_status"] }; Returns: boolean
+                           },
 "reschedule_booking":
 { Args: { "p_booking_id": string,"p_new_start": string }; Returns: {
               "end_at": string,"reschedule_count": number,"start_at": string
@@ -791,7 +866,10 @@ isOneToOne: false
 { Args: { "p_error"?: string,"p_owner_kind": string,"p_profile_id"?: string }; Returns: undefined
                            },
 "staff_cancel_booking":
-{ Args: { "p_booking_id": string,"p_notify"?: boolean,"p_reason"?: string }; Returns: number
+{ Args: { "p_booking_id": string,"p_notify"?: boolean,"p_reason"?: string,"p_refund"?: string }; Returns: number
+                           },
+"staff_request_refund":
+{ Args: { "p_amount_cents": number,"p_booking_id": string,"p_reason"?: string }; Returns: undefined
                            },
 "staff_reschedule_booking":
 { Args: { "p_booking_id": string,"p_new_start": string,"p_notify"?: boolean,"p_override"?: boolean,"p_reason"?: string,"p_specialist_id"?: string }; Returns: undefined
@@ -803,11 +881,11 @@ isOneToOne: false
 { Args: { "p_google_email": string,"p_owner_kind": string,"p_profile_id": string,"p_refresh_token": string,"p_scopes": (string)[] }; Returns: string
                            },
 "submit_booking":
-{ Args: { "p_booking_id": string,"p_intake"?: Json,"p_notes"?: string }; Returns: Database["public"]['Enums']["booking_status"]
+{ Args: { "p_booking_id": string,"p_intake"?: Json,"p_notes"?: string,"p_pay_full"?: boolean }; Returns: Database["public"]['Enums']["booking_status"]
                            }
           }
           Enums: {
-            "actor_type": "user"|"staff"|"admin"|"system","block_source": "manual"|"google"|"holiday","booking_source": "online"|"admin","booking_status": "held"|"pending_payment"|"confirmed"|"completed"|"cancelled"|"no_show"|"expired","job_status": "queued"|"running"|"succeeded"|"failed"|"dead","notification_channel": "email"|"sms"|"whatsapp","notification_status": "queued"|"sent"|"delivered"|"bounced"|"complained"|"failed","payment_status": "unpaid"|"pending"|"paid"|"partially_paid"|"refunded"|"failed","price_type": "fixed"|"from","user_role": "client"|"staff"|"admin"
+            "actor_type": "user"|"staff"|"admin"|"system","block_source": "manual"|"google"|"holiday","booking_source": "online"|"admin","booking_status": "held"|"pending_payment"|"confirmed"|"completed"|"cancelled"|"no_show"|"expired","job_status": "queued"|"running"|"succeeded"|"failed"|"dead","link_status": "open"|"paid"|"cancelled","notification_channel": "email"|"sms"|"whatsapp","notification_status": "queued"|"sent"|"delivered"|"bounced"|"complained"|"failed","payment_status": "unpaid"|"pending"|"paid"|"partially_paid"|"refunded"|"failed","price_type": "fixed"|"from","refund_status": "pending"|"completed"|"failed"|"rejected","user_role": "client"|"staff"|"admin"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -927,7 +1005,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "actor_type": ["user", "staff", "admin", "system"],"block_source": ["manual", "google", "holiday"],"booking_source": ["online", "admin"],"booking_status": ["held", "pending_payment", "confirmed", "completed", "cancelled", "no_show", "expired"],"job_status": ["queued", "running", "succeeded", "failed", "dead"],"notification_channel": ["email", "sms", "whatsapp"],"notification_status": ["queued", "sent", "delivered", "bounced", "complained", "failed"],"payment_status": ["unpaid", "pending", "paid", "partially_paid", "refunded", "failed"],"price_type": ["fixed", "from"],"user_role": ["client", "staff", "admin"]
+            "actor_type": ["user", "staff", "admin", "system"],"block_source": ["manual", "google", "holiday"],"booking_source": ["online", "admin"],"booking_status": ["held", "pending_payment", "confirmed", "completed", "cancelled", "no_show", "expired"],"job_status": ["queued", "running", "succeeded", "failed", "dead"],"link_status": ["open", "paid", "cancelled"],"notification_channel": ["email", "sms", "whatsapp"],"notification_status": ["queued", "sent", "delivered", "bounced", "complained", "failed"],"payment_status": ["unpaid", "pending", "paid", "partially_paid", "refunded", "failed"],"price_type": ["fixed", "from"],"refund_status": ["pending", "completed", "failed", "rejected"],"user_role": ["client", "staff", "admin"]
           }
         }
 } as const

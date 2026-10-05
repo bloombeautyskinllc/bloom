@@ -15,6 +15,14 @@ const serverEnvSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   // Resend delivery webhooks (whsec_...), optional until the webhook is configured in Resend
   RESEND_WEBHOOK_SECRET: z.string().optional(),
+  // Square payments (optional until online payments are turned on in the back office)
+  SQUARE_ENVIRONMENT: z.enum(['sandbox', 'production']).optional(),
+  SQUARE_APPLICATION_ID: z.string().optional(),
+  SQUARE_ACCESS_TOKEN: z.string().optional(),
+  SQUARE_LOCATION_ID: z.string().optional(),
+  SQUARE_WEBHOOK_SIGNATURE_KEY: z.string().optional(),
+  // The exact URL registered in Square (signatures cover it); defaults to the site URL
+  SQUARE_WEBHOOK_URL: z.url().optional(),
 });
 
 let cached: z.infer<typeof serverEnvSchema> | undefined;

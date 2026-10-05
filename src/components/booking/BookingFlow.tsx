@@ -6,7 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { HiArrowLeft } from 'react-icons/hi';
 import { useTranslations } from 'next-intl';
 import { routes } from '@/data/site';
-import { holdSlot, submitBooking, type Hold } from '@/lib/booking/actions';
+import { holdSlot, startPayment, submitBooking, type Hold } from '@/lib/booking/actions';
 import { quote as computeQuote } from '@/lib/booking/pricing';
 import type { BookingCatalog } from '@/lib/booking/types';
 import { scrollToTarget } from '@/lib/smoothScroll';
@@ -91,11 +91,16 @@ export default function BookingFlow({ catalog, timeZone, maxWindowDays, policy, 
     });
   };
 
-  const confirm = (values: { notes: string; intake?: Record<string, string | boolean> }) => {
+  const confirm = (values: { notes: string; intake?: Record<string, string | boolean>; payFull: boolean }) => {
     if (!hold) return;
     startTransition(async () => {
-      const result = await submitBooking({ bookingId: hold.bookingId, notes: values.notes || undefined, intake: values.intake });
+      const result = await submitBooking({ bookingId: hold.bookingId, notes: values.notes || undefined, intake: values.intake, payFull: values.payFull });
       if (result.ok) {
+        if (result.data.status === 'pending_payment') {
+          const payment = await startPayment({ bookingId: hold.bookingId });
+          // The slot stays held while paying; if checkout cannot open, the dashboard offers to retry
+          if (payment.ok) return window.location.assign(payment.data.url);
+        }
         router.push(`${routes.dashboard}?booked=${encodeURIComponent(hold.code)}`);
       } else {
         setError(t(`errors.${result.error}`));
@@ -210,6 +215,8 @@ export default function BookingFlow({ catalog, timeZone, maxWindowDays, policy, 
               hold={hold}
               intake={treatment.intake?.questions ?? null}
               policy={policy}
+              // Mirrors public.hold_slot: the fixed deposit, otherwise a percentage of the price
+              amountDueCents={policy.paymentsEnabled ? Math.min(treatment.depositCents ?? Math.round((hold.totalCents * (treatment.depositPercent ?? policy.depositPercent)) / 100), hold.totalCents) : 0}
               pending={pending}
               error={error}
               onExpired={() => {

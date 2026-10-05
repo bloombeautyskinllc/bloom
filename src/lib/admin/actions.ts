@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { logAppEvent } from '@/lib/audit/log';
 import { getSession } from '@/lib/auth/session';
 import { processJobs } from '@/lib/jobs/runner';
+import { paymentUrlFor } from '@/lib/payments/links';
 import { getRequestContext } from '@/lib/request-context';
 import { createClient } from '@/lib/supabase/server';
 
@@ -26,6 +27,10 @@ const KNOWN = [
   'invalid_options',
   'invalid_price',
   'not_cancellable',
+  'invalid_amount',
+  'refund_exceeds_paid',
+  'not_payable',
+  'payments_unavailable',
 ] as const;
 
 export type AdminErrorKey = (typeof KNOWN)[number] | 'generic';
@@ -64,7 +69,13 @@ export async function setBookingStatus(input: z.input<typeof statusSchema>): Pro
   return { ok: true, data: undefined };
 }
 
-const cancelSchema = z.object({ bookingId: z.uuid(), reason: z.string().max(500).optional(), notify: z.boolean() });
+const cancelSchema = z.object({
+  bookingId: z.uuid(),
+  reason: z.string().max(500).optional(),
+  notify: z.boolean(),
+  // What was paid online: all of it (the business cancels), the client policy amount, or nothing
+  refund: z.enum(['full', 'policy', 'none']).default('full'),
+});
 
 export async function cancelBookingAsStaff(input: z.input<typeof cancelSchema>): Promise<AdminResult> {
   const parsed = cancelSchema.safeParse(input);
@@ -73,9 +84,45 @@ export async function cancelBookingAsStaff(input: z.input<typeof cancelSchema>):
     p_booking_id: parsed.data.bookingId,
     p_reason: parsed.data.reason,
     p_notify: parsed.data.notify,
+    p_refund: parsed.data.refund,
   });
   if (error) return { ok: false, error: toError(error) };
   done(['/admin', '/admin/bookings', `/admin/bookings/${parsed.data.bookingId}`, '/admin/calendar']);
+  return { ok: true, data: undefined };
+}
+
+const linkSchema = z.object({ bookingId: z.uuid(), amountCents: z.number().int().positive().max(1_000_000).optional() });
+
+/** Square payment link to send to the client: the deposit or the balance by default, or a custom amount. */
+export async function createPaymentLinkAsStaff(input: z.input<typeof linkSchema>): Promise<AdminResult<{ url: string; amountCents: number; kind: string }>> {
+  const parsed = linkSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: 'invalid_amount' };
+  if (!(await staff())) return { ok: false, error: 'forbidden' };
+  try {
+    const result = await paymentUrlFor(parsed.data.bookingId, { amountCents: parsed.data.amountCents });
+    if (!result.ok) return { ok: false, error: result.error };
+    revalidatePath(`/admin/bookings/${parsed.data.bookingId}`);
+    return { ok: true, data: { url: result.url, amountCents: result.amountCents, kind: result.kind } };
+  } catch (e) {
+    console.error('[payments] staff payment link failed', e);
+    return { ok: false, error: 'payments_unavailable' };
+  }
+}
+
+const refundSchema = z.object({ bookingId: z.uuid(), amountCents: z.number().int().positive(), reason: z.string().max(500).optional() });
+
+/** Admin refund of an online payment (partial or full). Queued; the worker sends it to Square right away. */
+export async function refundBookingAsStaff(input: z.input<typeof refundSchema>): Promise<AdminResult> {
+  const parsed = refundSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: 'invalid_amount' };
+  if ((await getSession())?.profile.role !== 'admin') return { ok: false, error: 'forbidden' };
+  const { error } = await (await createClient()).rpc('staff_request_refund', {
+    p_booking_id: parsed.data.bookingId,
+    p_amount_cents: parsed.data.amountCents,
+    p_reason: parsed.data.reason,
+  });
+  if (error) return { ok: false, error: toError(error) };
+  done(['/admin/bookings', `/admin/bookings/${parsed.data.bookingId}`]);
   return { ok: true, data: undefined };
 }
 

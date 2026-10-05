@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { routes } from '@/data/site';
 import { logAppEvent } from '@/lib/audit/log';
 import { processJobs } from '@/lib/jobs/runner';
+import { paymentUrlFor } from '@/lib/payments/links';
 import { getRequestContext } from '@/lib/request-context';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
@@ -30,6 +31,8 @@ const KNOWN_ERRORS = [
   'not_reschedulable',
   'outside_policy',
   'max_reschedules',
+  'not_payable',
+  'payments_unavailable',
 ] as const;
 
 export type BookingErrorKey = (typeof KNOWN_ERRORS)[number] | 'invalid_request' | 'generic';
@@ -92,6 +95,8 @@ const submitSchema = z.object({
   bookingId: z.uuid(),
   notes: z.string().max(1000).optional(),
   intake: z.record(z.string(), z.union([z.string().max(2000), z.boolean()])).optional(),
+  // Pay the full price online instead of the deposit
+  payFull: z.boolean().optional(),
 });
 
 export async function submitBooking(input: z.input<typeof submitSchema>): Promise<ActionResult<{ status: string }>> {
@@ -103,12 +108,33 @@ export async function submitBooking(input: z.input<typeof submitSchema>): Promis
     p_booking_id: parsed.data.bookingId,
     p_notes: parsed.data.notes,
     p_intake: parsed.data.intake,
+    p_pay_full: parsed.data.payFull,
   });
   if (error || !data) return { ok: false, error: toError(error?.message) };
 
   revalidatePath(routes.dashboard);
   kickJobs();
   return { ok: true, data: { status: data } };
+}
+
+const paySchema = z.object({ bookingId: z.uuid() });
+
+/** Square checkout URL for a booking awaiting payment (the client is sent there to pay). */
+export async function startPayment(input: z.input<typeof paySchema>): Promise<ActionResult<{ url: string }>> {
+  const parsed = paySchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: 'invalid_request' };
+
+  // RLS: only the client (or staff) can see the booking
+  const { data: booking } = await (await createClient()).from('bookings').select('id').eq('id', parsed.data.bookingId).maybeSingle();
+  if (!booking) return { ok: false, error: 'not_found' };
+
+  try {
+    const result = await paymentUrlFor(booking.id);
+    return result.ok ? { ok: true, data: { url: result.url } } : { ok: false, error: result.error };
+  } catch (e) {
+    console.error('[payments] could not start payment', e);
+    return { ok: false, error: 'payments_unavailable' };
+  }
 }
 
 // -----------------------------------------------------------------------------

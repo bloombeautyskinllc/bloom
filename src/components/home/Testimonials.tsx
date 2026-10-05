@@ -1,3 +1,5 @@
+'use client';
+
 import { useRef } from 'react';
 import SectionLabel from '../ui/SectionLabel';
 import Stars from '../ui/Stars';

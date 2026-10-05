@@ -499,7 +499,54 @@ real contact details, legal texts, intake questions, custom domain.
 | 3. Availability engine, booking flow, client dashboard | Done | `src/lib/availability` (pure, DST-tested), `/booking`, `/dashboard`, `.ics` + Google Calendar link, profile edit, account deletion. Payments flag off: bookings confirm immediately; `pending_payment` path is wired for phase 6. No booking emails yet (phase 4). |
 | 4. Google Calendar sync + notifications | Done | Triggers on `bookings` enqueue jobs (client + staff emails with .ics, reminders, review request, calendar sync). pg_cron → pg_net → `/api/jobs/run` every minute (URL + secret in Vault: `npm run jobs:configure -- <app url>`). Google Calendar: business (admin) and client connections, tokens in Vault, two-way sync by 15-min `syncToken` pull + push channels on HTTPS. Resend delivery webhook (Svix-verified, idempotent). |
 | 5. Back office + audit log UI | Done | `/admin` with its own shell. Staff: dashboard, calendar (day/week/month, drag and drop, Supabase Realtime), bookings (filters, CSV, actions, notes), custom bookings (new client, custom service, manual price/discount, rules override with reason), clients (CRM: notes, tags, private documents with signed URLs, history). Admin only: catalog, team & hours, blocks, staff access, settings, activity log (+ CSV). Staff RPCs in `*_back_office.sql`; notify-client flag honored by the outbox. |
-| 6. Payments foundation + payment links | Next | |
+| 6. Payments | Done (sandbox) | **Square instead of Stripe**: the business already has a Square account that pays out to its Bank of America account. See §8. |
 
 Treatment page menu rows link to `/booking?treatment=<slug>[&options=<slug>]` (the `book` field in
 `src/data/treatmentPages.ts`), so the booking intent survives sign-in.
+
+---
+
+## 8. Payments with Square (2026-10-02)
+
+Square replaces the Stripe plan in §3 and §4.5: the business already takes card payments with Square,
+and Square pays out to its Bank of America business account. Nothing is configured on the bank side.
+
+**Flow.** With `payments_enabled` on, `submit_booking` moves the booking to `pending_payment` and keeps
+the slot for 30 minutes. The server creates a Square **hosted payment link** (one order per booking,
+`reference_id` = booking id, a single line for the amount due: deposit or full price) and redirects the
+client to it. After paying, Square sends the client to `/booking/return`, which checks the order with
+Square right away and redirects to the dashboard once the booking is confirmed. The client never enters
+card details on our site (PCI SAQ A).
+
+**Recording payments.** `public.record_payment` (service role) is the only writer and is idempotent per
+Square payment id. It is fed from three places, so one missed path never loses a payment:
+the verified webhook (`/api/webhooks/square`, HMAC-SHA256 of URL + body), the return page, and the
+`payments.reconcile` job (pg_cron every 2 minutes while links are open, and whenever a booking stops
+waiting for payment). Payments for orders that are not ours (in-store sales) are ignored.
+
+**Expiry.** Square payment links never expire, so the reconcile job deletes the link of any booking that
+is no longer `pending_payment` (expired, cancelled, confirmed at the studio). A payment that still lands
+after the hold expired reinstates the booking if the time is free, otherwise it is refunded in full.
+
+**Refunds.** Cancellations queue a `payment.refund` job with `refund_due_cents` (client: policy
+percentage of what was paid; staff: full by default, or policy, or none). Admins can also refund any
+amount from the booking page. The worker calls Square with an idempotency key per job and payment, and
+`public.record_refund` tracks the status (webhooks update it). Failed refunds alert staff by email.
+
+**Configuration.** `SQUARE_ACCESS_TOKEN`, `SQUARE_LOCATION_ID`, `SQUARE_APPLICATION_ID` (sandbox ids
+start with `sandbox-`, which selects the sandbox API unless `SQUARE_ENVIRONMENT` says otherwise),
+`SQUARE_WEBHOOK_SIGNATURE_KEY` and optionally `SQUARE_WEBHOOK_URL` (the exact URL registered in Square;
+defaults to `NEXT_PUBLIC_SITE_URL/api/webhooks/square`). Webhook events: `payment.created`,
+`payment.updated`, `refund.created`, `refund.updated`. Online payments cannot be switched on in
+Admin › Settings until Square is configured.
+
+**Deposit and balance (2026-10-05).** Online bookings charge `business_settings.deposit_percent`
+(40% by default, editable in Settings) unless the treatment has a fixed `deposit_cents`. The rest is
+paid after the visit: the client sees "Pay balance" on the dashboard once the appointment has started,
+and staff can create a payment link from the booking page (any amount, e.g. after a price adjustment) and
+copy it to send by WhatsApp, text or email. `payment_links.kind` is `deposit` or `balance`; a booking has
+at most one open link, and creating one for another amount replaces the previous one. Balance links stay
+open until paid or until the booking is cancelled; pg_cron polls them only for their first 2 hours, after
+that the webhook and the return page record the payment.
+The catalog edits the deposit as a percentage per treatment (`treatments.deposit_percent`, prefilled
+with the business default; saving the default stores null so the treatment keeps following Settings).

@@ -8,23 +8,26 @@ expected_tables(name) as (values
   ('public.webhook_events'), ('public.availability_blocks'), ('public.bookings'), ('public.booking_items'),
   ('public.intake_responses'), ('public.calendar_events'), ('public.google_watch_channels'),
   ('public.google_sync_state'), ('public.booking_notes'), ('public.client_notes'), ('public.client_tags'),
-  ('public.client_tag_links'), ('public.client_documents'), ('private.google_credentials')
+  ('public.client_tag_links'), ('public.client_documents'), ('private.google_credentials'),
+  ('public.payment_links'), ('public.payments'), ('public.refunds')
 ),
 expected_functions(name) as (values
-  -- one per migration, ending with the latest (back office)
+  -- one per migration, ending with the latest (payments)
   ('private.set_updated_at'), ('private.handle_new_auth_user'), ('private.audit_row'), ('public.get_public_settings'),
   ('public.claim_jobs'), ('public.submit_booking'), ('public.hold_slot'), ('private.handle_auth_email_confirmed'),
   ('public.configure_job_worker'), ('private.call_job_worker'), ('public.store_google_credential'),
   ('public.staff_set_booking_status'), ('public.admin_create_booking'), ('public.admin_dashboard'),
-  ('public.admin_set_working_hours'), ('public.flag_bookings_pending_closure')
+  ('public.admin_set_working_hours'), ('public.flag_bookings_pending_closure'),
+  ('public.record_payment'), ('public.record_refund'), ('public.staff_request_refund')
 ),
 expected_triggers(tbl, name) as (values
   ('auth.users', 'on_auth_user_created'), ('auth.users', 'on_auth_user_email_confirmed'),
   ('public.bookings', 'bookings_enqueue_jobs'), ('public.bookings', 'bookings_set_blocked_range'),
-  ('public.profiles', 'profiles_guard'), ('public.audit_log', 'audit_log_no_update_delete')
+  ('public.profiles', 'profiles_guard'), ('public.audit_log', 'audit_log_no_update_delete'),
+  ('public.bookings', 'bookings_enqueue_payment_jobs')
 ),
 expected_cron(name) as (values
-  ('bloom-job-worker'), ('bloom-expire-holds'), ('bloom-calendar-pull'), ('bloom-calendar-renew'), ('bloom-flag-closure')
+  ('bloom-job-worker'), ('bloom-expire-holds'), ('bloom-calendar-pull'), ('bloom-calendar-renew'), ('bloom-flag-closure'), ('bloom-payments-reconcile')
 ),
 checks as (
   -- 1. Extensions
@@ -123,9 +126,41 @@ checks as (
          coalesce(string_agg(p.email, ', '), 'none yet: sign in with an email listed in ADMIN_EMAILS')
   from public.profiles p where p.role = 'admin' and p.deleted_at is null
 
-  -- 9. Google Calendar (business account connected from the admin panel)
+  -- 9. Payments (Square). Online payments on/off is set in Admin > Settings
   union all
-  select 12, 'google', 'business calendar connected', count(*) > 0,
+  select 12, 'payments', 'online payments', null,
+         case when payments_enabled then 'enabled' else 'disabled (bookings are confirmed without paying)' end
+  from public.business_settings where id = 1
+  union all
+  select 12, 'payments', 'deposit at booking', (to_jsonb(s) ? 'deposit_percent'),
+         coalesce((to_jsonb(s) ->> 'deposit_percent') || '% of the price (unless the treatment has a fixed deposit)', 'missing: apply the deposit migration')
+  from public.business_settings s where id = 1
+  union all
+  select 12, 'payments', 'square webhooks (7d)', case when (select payments_enabled from public.business_settings where id = 1) then count(*) > 0 end,
+         count(*) || ' events' || coalesce(' · last ' || to_char(max(received_at), 'YYYY-MM-DD HH24:MI'), '')
+           || case when count(*) filter (where processed_at is null and received_at < now() - interval '10 minutes') > 0
+                   then ' · ' || count(*) filter (where processed_at is null and received_at < now() - interval '10 minutes') || ' not processed' else '' end
+  from public.webhook_events where provider = 'square' and received_at > now() - interval '7 days'
+  -- The payment tables are queried through query_to_xml so this script also runs before the payments migration
+  union all
+  select 12, 'payments', 'stale payment links', x.n = 0,
+         coalesce(x.n || ' open links of bookings no longer awaiting payment (reconcile job should close them)', 'payments migration not applied yet')
+  from (select case when to_regclass('public.payment_links') is not null then (xpath('/row/n/text()', query_to_xml($q$
+          select count(*) as n from public.payment_links l join public.bookings b on b.id = l.booking_id
+          where l.status = 'open' and (b.status <> 'pending_payment' or b.hold_expires_at < now() - interval '10 minutes')
+        $q$, false, true, '')))[1]::text::int end as n) x
+  union all
+  select 12, 'payments', 'refunds not completed', x.failed = 0,
+         coalesce(x.pending || ' processing · ' || x.failed || ' failed/rejected (refund manually in Square)', 'payments migration not applied yet')
+  from (select (xpath('/row/p/text()', r))[1]::text::int as pending, (xpath('/row/f/text()', r))[1]::text::int as failed
+        from (select case when to_regclass('public.refunds') is not null then query_to_xml($q$
+                select count(*) filter (where status = 'pending') as p, count(*) filter (where status in ('failed', 'rejected')) as f
+                from public.refunds where created_at > now() - interval '30 days'
+              $q$, false, true, '') end as r) q) x
+
+  -- 10. Google Calendar (business account connected from the admin panel)
+  union all
+  select 13, 'google', 'business calendar connected', count(*) > 0,
          coalesce(string_agg(c.google_email, ', '), 'not connected yet (optional)')
   from private.google_credentials c where c.owner_kind = 'business' and c.revoked_at is null
 )

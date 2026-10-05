@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { routes } from '@/data/site';
 import type { Hold } from '@/lib/booking/actions';
+import { formatMoney } from '@/lib/booking/format';
 import type { IntakeQuestion } from '@/lib/booking/types';
 import { StepHeading } from './steps';
 
@@ -13,16 +14,20 @@ export type PolicySummary = {
   maxReschedules: number;
   refundPercent: number;
   paymentsEnabled: boolean;
+  /** Share of the price charged at booking when the treatment has no fixed deposit */
+  depositPercent: number;
 };
 
 type Props = {
   hold: Hold;
   intake: IntakeQuestion[] | null;
   policy: PolicySummary;
+  /** Deposit charged online before the booking is confirmed (0 = no deposit). The client may pay the full price instead. */
+  amountDueCents: number;
   pending: boolean;
   error: string | null;
   onExpired: () => void;
-  onSubmit: (values: { notes: string; intake?: Record<string, string | boolean> }) => void;
+  onSubmit: (values: { notes: string; intake?: Record<string, string | boolean>; payFull: boolean }) => void;
 };
 
 function useCountdown(until: string) {
@@ -37,11 +42,15 @@ function useCountdown(until: string) {
 const fieldClass =
   'w-full rounded-xl border border-taupe bg-white px-4 py-3 text-base text-ink placeholder:text-muted/60 transition focus:border-bronze focus:outline-none focus:ring-2 focus:ring-accent/30';
 
-export default function ConfirmStep({ hold, intake, policy, pending, error, onExpired, onSubmit }: Props) {
+export default function ConfirmStep({ hold, intake, policy, amountDueCents, pending, error, onExpired, onSubmit }: Props) {
   const t = useTranslations('booking.confirm');
   const left = useCountdown(hold.holdExpiresAt);
   const [notes, setNotes] = useState('');
   const [answers, setAnswers] = useState<Record<string, string | boolean>>({});
+  const [payFull, setPayFull] = useState(false);
+  // With online payments the client chooses: the deposit, or everything now
+  const canChoose = policy.paymentsEnabled && amountDueCents < hold.totalCents;
+  const chargeCents = payFull ? hold.totalCents : amountDueCents;
   const minutes = Math.floor(left / 60_000);
   const seconds = Math.floor((left % 60_000) / 1000);
   const expired = left === 0;
@@ -73,7 +82,7 @@ export default function ConfirmStep({ hold, intake, policy, pending, error, onEx
         onSubmit={(e) => {
           e.preventDefault();
           if (expired || missing.length > 0) return;
-          onSubmit({ notes, intake: intake ? answers : undefined });
+          onSubmit({ notes, intake: intake ? answers : undefined, payFull: canChoose && payFull });
         }}
       >
         {intake && intake.length > 0 && (
@@ -141,6 +150,38 @@ export default function ConfirmStep({ hold, intake, policy, pending, error, onEx
           </p>
         </div>
 
+        {canChoose ? (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-sm font-medium text-ink">{t('payChoice')}</legend>
+            {[
+              { full: false, label: amountDueCents > 0 ? t('payDeposit', { amount: formatMoney(amountDueCents) }) : t('payLater'), hint: t('payDepositHint', { amount: formatMoney(hold.totalCents - amountDueCents) }) },
+              { full: true, label: t('payFull', { amount: formatMoney(hold.totalCents) }), hint: t('payFullHint') },
+            ].map((o) => (
+              <label
+                key={String(o.full)}
+                className={`flex cursor-pointer items-start gap-3 rounded-2xl border px-5 py-4 transition ${payFull === o.full ? 'border-cocoa bg-cream' : 'border-stone bg-white/60 hover:border-taupe'}`}
+              >
+                <input type="radio" name="pay" checked={payFull === o.full} onChange={() => setPayFull(o.full)} className="mt-1 accent-cocoa" />
+                <span>
+                  <span className="block text-sm font-medium text-ink">{o.label}</span>
+                  <span className="block text-sm text-muted">{o.hint}</span>
+                </span>
+              </label>
+            ))}
+            {chargeCents > 0 && <p className="mt-1 text-sm leading-relaxed text-muted">{t('paymentNote')}</p>}
+          </fieldset>
+        ) : (
+          chargeCents > 0 && (
+            <div className="rounded-2xl border border-stone bg-cream px-5 py-4">
+              <p className="flex items-baseline justify-between gap-4 text-sm font-medium text-ink">
+                <span>{t('dueNow')}</span>
+                <span className="font-serif text-xl tabular-nums">{formatMoney(chargeCents)}</span>
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-muted">{t('paymentNote')}</p>
+            </div>
+          )
+        )}
+
         {error && (
           <p role="alert" className="rounded-xl border border-accent/30 bg-sand px-4 py-3 text-sm text-ink">
             {error}
@@ -148,7 +189,7 @@ export default function ConfirmStep({ hold, intake, policy, pending, error, onEx
         )}
 
         <button type="submit" disabled={pending || expired || missing.length > 0} className="btn-dark w-full justify-center disabled:opacity-60">
-          {pending ? t('submitting') : t('submit')}
+          {pending ? (chargeCents > 0 ? t('redirecting') : t('submitting')) : chargeCents > 0 ? t('submitPay', { amount: formatMoney(chargeCents) }) : t('submit')}
         </button>
       </form>
     </div>

@@ -8,6 +8,18 @@ type Payment = Database['public']['Enums']['payment_status'];
 
 const STATUSES = ['pending_payment', 'confirmed', 'completed', 'cancelled', 'no_show'] as const;
 const PAYMENTS = ['unpaid', 'pending', 'paid', 'partially_paid', 'refunded', 'failed'] as const;
+// created = when the booking was made (default); start = appointment time
+const SORTS = ['created_desc', 'created_asc', 'start_asc', 'start_desc', 'client_asc', 'total_desc', 'total_asc'] as const;
+
+const SORT_ORDER: Record<(typeof SORTS)[number], { column: 'created_at' | 'start_at' | 'client_name' | 'total_cents'; ascending: boolean }> = {
+  created_desc: { column: 'created_at', ascending: false },
+  created_asc: { column: 'created_at', ascending: true },
+  start_asc: { column: 'start_at', ascending: true },
+  start_desc: { column: 'start_at', ascending: false },
+  client_asc: { column: 'client_name', ascending: true },
+  total_desc: { column: 'total_cents', ascending: false },
+  total_asc: { column: 'total_cents', ascending: true },
+};
 
 export const bookingFiltersSchema = z.object({
   q: z.string().trim().max(80).optional().catch(undefined),
@@ -18,11 +30,14 @@ export const bookingFiltersSchema = z.object({
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().catch(undefined),
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().catch(undefined),
   page: z.coerce.number().int().min(1).max(500).optional().catch(undefined),
+  sort: z.enum(SORTS).default('created_desc').catch('created_desc'),
 });
 
 export type BookingFilters = z.infer<typeof bookingFiltersSchema>;
 export const BOOKING_STATUSES = STATUSES;
 export const PAYMENT_STATUSES = PAYMENTS;
+export const BOOKING_SORTS = SORTS;
+export type BookingSort = (typeof SORTS)[number];
 
 export const BOOKING_COLUMNS =
   'id, code, status, payment_status, source, start_at, end_at, total_cents, subtotal_cents, discount_cents, client_id, client_name, client_email, client_phone, specialist_name, service, options, rules_overridden, client_notes, cancellation_reason, created_at';
@@ -47,7 +62,10 @@ export async function queryBookings(filters: BookingFilters, range: { from?: Dat
     if (q) query = query.or(`client_name.ilike.%${q}%,client_email.ilike.%${q}%,client_phone.ilike.%${q}%,code.ilike.%${q}%`);
   }
 
-  // Upcoming first when looking forward, most recent first otherwise
-  const ascending = Boolean(range.from && range.from.getTime() >= Date.now() - 86_400_000);
-  return query.order('start_at', { ascending }).range(offset, offset + limit - 1);
+  const { column, ascending } = SORT_ORDER[filters.sort];
+  // Ties (same day, same client...) keep a stable order: newest booking first
+  return query
+    .order(column, { ascending, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
 }

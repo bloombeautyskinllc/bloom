@@ -10,6 +10,9 @@ export type BookingDetails = {
   startAt: string;
   endAt: string;
   totalCents: number;
+  amountPaidCents: number;
+  amountRefundedCents: number;
+  refundDueCents: number | null;
   isStartingPrice: boolean;
   treatmentName: string;
   optionNames: string[];
@@ -32,7 +35,7 @@ export async function loadBooking(bookingId: string): Promise<BookingDetails | n
   const { data: b, error } = await createAdminClient()
     .from('bookings')
     .select(
-      'id, code, status, payment_status, start_at, end_at, total_cents, client_notes, reschedule_count, cancellation_reason, ' +
+      'id, code, status, payment_status, start_at, end_at, total_cents, amount_paid_cents, amount_refunded_cents, refund_due_cents, client_notes, reschedule_count, cancellation_reason, ' +
         'items:booking_items(kind, name, price_type, sort_order), ' +
         'client:profiles!client_id(id, full_name, email, phone_e164, reminders_opt_in, locale, anonymized_at, deleted_at)',
     )
@@ -49,6 +52,9 @@ export async function loadBooking(bookingId: string): Promise<BookingDetails | n
     start_at: string;
     end_at: string;
     total_cents: number;
+    amount_paid_cents: number;
+    amount_refunded_cents: number;
+    refund_due_cents: number | null;
     client_notes: string | null;
     reschedule_count: number;
     cancellation_reason: string | null;
@@ -65,6 +71,9 @@ export async function loadBooking(bookingId: string): Promise<BookingDetails | n
     startAt: row.start_at,
     endAt: row.end_at,
     totalCents: row.total_cents,
+    amountPaidCents: row.amount_paid_cents,
+    amountRefundedCents: row.amount_refunded_cents,
+    refundDueCents: row.refund_due_cents,
     isStartingPrice: items.some((i) => i.price_type === 'from'),
     treatmentName: items.find((i) => i.kind !== 'option')?.name ?? 'Appointment',
     optionNames: items.filter((i) => i.kind === 'option').map((i) => i.name),

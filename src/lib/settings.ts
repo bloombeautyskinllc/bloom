@@ -24,6 +24,8 @@ const publicSettingsSchema = z.object({
   late_cancellation_refund_percent: z.number(),
   minors_allowed_with_guardian: z.boolean(),
   payments_enabled: z.boolean(),
+  // Missing until the deposit migration is applied: the database default
+  deposit_percent: z.number().default(40),
   terms_version: z.string(),
 });
 
