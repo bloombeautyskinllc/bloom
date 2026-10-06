@@ -13,10 +13,12 @@ import adminClients from '@/assets/guide/admin-clients.jpg';
 import adminHome from '@/assets/guide/admin-home.jpg';
 import adminSettings from '@/assets/guide/admin-settings.jpg';
 import adminTeam from '@/assets/guide/admin-team.jpg';
+import adminTestimonials from '@/assets/guide/admin-testimonials.jpg';
 import booking1 from '@/assets/guide/booking-1-category.jpg';
 import booking2 from '@/assets/guide/booking-2-treatment.jpg';
 import booking3 from '@/assets/guide/booking-3-next.jpg';
 import booking5 from '@/assets/guide/booking-5-confirm.jpg';
+import bookingConsent from '@/assets/guide/booking-consent.jpg';
 import clientDashboard from '@/assets/guide/client-dashboard.jpg';
 import mobileAdmin from '@/assets/guide/mobile-admin.jpg';
 import mobileHome from '@/assets/guide/mobile-home.jpg';
@@ -27,7 +29,7 @@ import publicSignin from '@/assets/guide/public-signin-modal.jpg';
 import publicTerms from '@/assets/guide/public-terms.jpg';
 import publicFacials from '@/assets/guide/public-treatment-facials.jpg';
 
-export const metadata = { title: 'Guide' };
+export const metadata = { title: 'Documentation' };
 
 // The user guide for the owner and the team, written in Spanish at their request.
 // Screenshots use sample client data (names, emails and phones are not real).
@@ -150,7 +152,7 @@ export default async function GuidePage() {
   return (
     <>
       <PageHeader
-        title="Guía de uso"
+        title="Documentación"
         intro="Todo lo que hace la página: lo que ven tus clientas, cómo reservan y pagan, y cómo manejas citas, clientas, precios, horarios y pagos desde este panel. Las capturas usan datos de ejemplo."
       />
 
@@ -199,7 +201,8 @@ export default async function GuidePage() {
             </p>
             <p>
               Los precios, duraciones y descripciones que se ven al reservar salen del <a href="#catalogo" className="underline underline-offset-2">Catálogo</a>: si cambias un precio ahí, cambia
-              en el flujo de reserva.
+              en el flujo de reserva. Las historias de clientas que aparecen en el inicio y en cada categoría se manejan desde{' '}
+              <a href="#testimonios" className="underline underline-offset-2">Testimonios</a>.
             </p>
             <Shot src={publicFacials} alt="Página de la categoría Facials" tall caption="Página de una categoría (Facials). Se desplaza dentro del recuadro." />
             <p>El sitio se adapta al celular, que es desde donde reserva la mayoría de las clientas:</p>
@@ -214,6 +217,10 @@ export default async function GuidePage() {
               En el pie de página están <Ui>Terms of service</Ui>, <Ui>Privacy policy</Ui> y <Ui>Client intake form</Ui>. Los términos publican automáticamente la política de
               cancelación de <a href="#settings" className="underline underline-offset-2">Configuración</a> (horas de anticipación, porcentaje de reembolso, número de reprogramaciones). Si
               cambias esos valores, los términos se actualizan solos.
+            </p>
+            <p>
+              <Ui>Client intake form</Ui> lleva a reservar: el formulario de admisión y consentimiento ya no es una página aparte, se llena y se firma en línea como parte de cada reserva
+              (ver <a href="#reservar" className="underline underline-offset-2">Reservar y pagar</a>).
             </p>
             <Shot src={publicTerms} alt="Términos del servicio" tall caption="Términos del servicio." />
           </Section>
@@ -233,7 +240,7 @@ export default async function GuidePage() {
           </Section>
 
           <Section id="reservar" title="Reservar y pagar">
-            <p>La reserva tiene cuatro pasos y un resumen fijo a la derecha con el tratamiento, la fecha, la duración y el total.</p>
+            <p>La reserva tiene cinco pasos y un resumen fijo a la derecha (abajo en el celular) con el tratamiento, la fecha, la duración y el total.</p>
             <Steps
               items={[
                 <>
@@ -242,6 +249,10 @@ export default async function GuidePage() {
                 <>
                   <strong>Tratamiento.</strong> Ve los tratamientos de esa categoría con precio y duración. Si el tratamiento tiene opciones (por ejemplo, zonas del láser) aparece un paso extra
                   para elegirlas.
+                </>,
+                <>
+                  <strong>Consentimiento.</strong> El formulario de admisión y consentimiento del estudio, en seis secciones: datos de la clienta, historial de piel, historial de salud,
+                  preferencias, consentimiento y firma. No puede pasar a la siguiente sección sin llenar lo obligatorio, y firma con el dedo o el mouse.
                 </>,
                 <>
                   <strong>Fecha y hora.</strong> Solo se muestran horas libres según tus horarios, bloqueos, citas existentes, el aviso mínimo y hasta cuántos días adelante se puede reservar.
@@ -255,8 +266,17 @@ export default async function GuidePage() {
             />
             <Shot src={booking1} alt="Paso 1, categoría" caption="Paso 1: categoría." />
             <Shot src={booking2} alt="Paso 2, tratamiento" caption="Paso 2: tratamiento." />
-            <Shot src={booking3} alt="Paso 3, fecha y hora" caption="Paso 3: fecha y hora. Los días con puntito tienen horas libres." />
-            <Shot src={booking5} alt="Paso 4, confirmar y elegir pago" tall caption="Paso 4: revisar, elegir depósito o pago completo y continuar al pago." />
+            <Shot src={bookingConsent} alt="Paso 3, formulario de consentimiento en el celular" width={260} caption="Paso 3: consentimiento, sección 1 de 6." />
+            <ul>
+              <li>
+                <strong>La siguiente vez que reserva</strong>, el formulario ya viene lleno con sus respuestas anteriores: solo revisa que todo siga igual, marca las casillas de
+                consentimiento y vuelve a firmar. La primera vez se llenan solos su nombre, email y teléfono.
+              </li>
+              <li>El tratamiento de ese día se marca solo según lo que reservó.</li>
+              <li>Mientras llena el formulario la hora todavía no está apartada; se aparta cuando la elige en el paso siguiente.</li>
+            </ul>
+            <Shot src={booking3} alt="Paso 4, fecha y hora" caption="Paso 4: fecha y hora. Los días con puntito tienen horas libres." />
+            <Shot src={booking5} alt="Paso 5, confirmar y elegir pago" tall caption="Paso 5: revisar, elegir depósito o pago completo y continuar al pago." />
             <h4 className="mt-4 font-semibold">Cómo funciona el pago</h4>
             <ul>
               <li>
@@ -293,6 +313,9 @@ export default async function GuidePage() {
               <li>
                 <Ui>Add to Google Calendar</Ui> o <Ui>Download .ics</Ui>: guardar la cita en su calendario.
               </li>
+              <li>
+                <Ui>Consent form (PDF)</Ui>: descargar el formulario de consentimiento que firmó para esa cita.
+              </li>
             </ul>
             <p>
               Cuando ya pasó el plazo para cambios en línea, la cita muestra un enlace para escribirte por WhatsApp. También puede editar su perfil, apagar recordatorios o borrar su cuenta (se
@@ -328,8 +351,8 @@ export default async function GuidePage() {
             <Table
               head={['Rol', 'Puede']}
               rows={[
-                [<Pill key="s">Staff</Pill>, 'Dashboard, calendario, reservas, nueva reserva, clientas y esta guía.'],
-                [<Pill key="a">Admin</Pill>, 'Todo lo anterior, más catálogo, equipo y horarios, configuración, registro de actividad y reembolsos.'],
+                [<Pill key="s">Staff</Pill>, 'Dashboard, calendario, reservas, nueva reserva, clientas y esta documentación.'],
+                [<Pill key="a">Admin</Pill>, 'Todo lo anterior, más catálogo, testimonios, equipo y horarios, configuración, registro de actividad y reembolsos.'],
               ]}
             />
             <p>El panel también funciona en el celular, con el menú plegado.</p>
@@ -402,6 +425,22 @@ export default async function GuidePage() {
                 Según el estado también aparecen <Ui>Confirm (paid at studio)</Ui>, <Ui>Mark completed</Ui> y <Ui>Mark no-show</Ui>.
               </li>
             </ul>
+            <h4 className="font-semibold">Admisión y consentimiento</h4>
+            <ul>
+              <li>
+                Si la clienta firmó el formulario, aparece <Pill>Signed</Pill> con su nombre y la fecha, y <Ui>Download PDF</Ui> para descargarlo. Cada descarga queda en el registro de
+                actividad.
+              </li>
+              <li>
+                Debajo, un resumen de lo importante para la sesión: condiciones de salud (en rojo si marcó alguna), medicación, alergias, zonas a evitar, presión preferida y si aceptó
+                fotos de antes y después.
+              </li>
+              <li>
+                <strong>Esthetician record</strong>: la parte de la esteticista. Marca las zonas en las caras de frente y perfil dibujando sobre ellas, anota el análisis de piel y el
+                registro del tratamiento (productos, reacción de la piel, cuidados en casa, próxima cita), firma y pulsa <Ui>Save record</Ui>. Todo eso se agrega al PDF.
+              </li>
+              <li>Las reservas creadas desde el panel no tienen formulario en línea: pídele a la clienta que firme el formulario en papel y súbelo a su ficha.</li>
+            </ul>
             <h4 className="font-semibold">Pagos</h4>
             <ul>
               <li>Lo que se debe en línea, lo pagado y lo reembolsado, con cada pago de Square y su recibo.</li>
@@ -473,7 +512,10 @@ export default async function GuidePage() {
                 <strong>Notes</strong>: preferencias, alergias y lo que el equipo deba saber; se pueden fijar arriba.
               </li>
               <li>
-                <strong>Consent forms &amp; documents</strong>: consentimientos firmados, formularios o fotos (PDF o imagen, hasta 10 MB). Son privados y cada vez que alguien los abre queda
+                <strong>Consent forms</strong>: los formularios firmados en línea, uno por cita, con su PDF. Indica si falta la parte de la esteticista.
+              </li>
+              <li>
+                <strong>Documents</strong>: consentimientos firmados, formularios o fotos (PDF o imagen, hasta 10 MB). Son privados y cada vez que alguien los abre queda
                 registrado.
               </li>
               <li>
@@ -500,22 +542,51 @@ export default async function GuidePage() {
           </Section>
 
           <Section id="testimonios" title="Testimonios" adminOnly>
-            <p>Las historias de clientas que se ven en la página de inicio y en cada página de tratamiento.</p>
+            <p>
+              Las historias de clientas que se ven en la página de inicio y en las páginas de cada categoría. Cada historia tiene una foto, una frase destacada, el texto, la etiqueta del
+              tratamiento y las estrellas. Los cambios se ven en el sitio en cuanto guardas.
+            </p>
+            <h4 className="font-semibold">La lista</h4>
             <ul>
               <li>
-                Con <Ui>Edit</Ui> cambias la frase destacada, el texto, la etiqueta del tratamiento, las estrellas y la foto (<Ui>Replace photo</Ui>). La foto se reduce sola antes de
-                subirse.
+                Los filtros de arriba (<Ui>All</Ui>, <Ui>Home</Ui> y cada categoría) muestran solo las historias de esa página, con cuántas hay en cada una.
+              </li>
+              <li>Las flechas cambian el orden: el sitio muestra las historias en el mismo orden que aquí.</li>
+              <li>
+                Las etiquetas debajo de cada historia dicen en qué páginas sale. <Pill>Hidden</Pill> indica que está oculta y <Pill>Not on any page</Pill> que no está en ninguna página.
               </li>
               <li>
-                En <Ui>Show on</Ui> eliges en qué páginas aparece: <em>Home</em> y cualquier tratamiento. Una misma historia puede salir en varias páginas.
-              </li>
-              <li>
-                Las flechas cambian el orden; el sitio muestra las historias en ese orden. Los filtros de arriba muestran solo las de una página.
-              </li>
-              <li>
-                Quita <Ui>Visible on the website</Ui> para ocultar una historia sin borrarla. <Ui>+ Add testimonial</Ui> agrega una nueva.
+                <Ui>Delete</Ui> la borra para siempre (pide confirmación). Si solo quieres quitarla un tiempo, mejor ocúltala.
               </li>
             </ul>
+            <h4 className="font-semibold">Agregar o editar una historia</h4>
+            <Steps
+              items={[
+                <>
+                  <strong>Foto.</strong> Pulsa <Ui>+ Add testimonial</Ui> (o <Ui>Edit</Ui> en una existente) y luego <Ui>Upload photo</Ui> o <Ui>Replace photo</Ui>. Sirve JPG, PNG o WebP; se
+                  achica sola antes de subirse. Es obligatoria.
+                </>,
+                <>
+                  <strong>Textos.</strong> <Ui>Headline quote</Ui> es la frase grande, corta y sin comillas (el sitio las agrega). <Ui>Story</Ui> es el testimonio completo.{' '}
+                  <Ui>Treatment label</Ui> (opcional) dice qué tratamiento se hizo y <Ui>Photo label</Ui> (opcional) se muestra sobre la foto.
+                </>,
+                <>
+                  <strong>Estrellas y descripción.</strong> Elige las estrellas en <Ui>Rating</Ui> y describe la foto en <Ui>Photo description</Ui> (por ejemplo, “Labios con color natural
+                  ya cicatrizados”): la usan los lectores de pantalla y Google.
+                </>,
+                <>
+                  <strong>Dónde sale.</strong> En <Ui>Show on</Ui> marca <em>Home</em> y las categorías donde debe aparecer; una historia puede salir en varias. Quita{' '}
+                  <Ui>Visible on the website</Ui> para ocultarla sin borrarla.
+                </>,
+                <>
+                  <strong>Guardar.</strong> Pulsa <Ui>Save</Ui>. <Ui>Cancel</Ui> descarta los cambios.
+                </>,
+              ]}
+            />
+            <Shot src={adminTestimonials} alt="Testimonios con una historia abierta para editar" tall caption="Testimonios, con una historia abierta para editar." />
+            <p className="rounded-xl bg-sand px-4 py-3 text-sm">
+              Usa solo fotos y testimonios de clientas que hayan dado su permiso. En el formulario de consentimiento puedes ver si aceptó fotos de antes y después.
+            </p>
           </Section>
 
           <Section id="equipo" title="Equipo y horarios" adminOnly>
@@ -617,6 +688,12 @@ export default async function GuidePage() {
               <Faq q="Cobrar el resto después del tratamiento">
                 Si paga en el estudio, márcala como completada. Si prefiere pagar en línea, ella misma puede usar Pay balance desde su cuenta, o tú puedes crear un enlace con Create payment
                 link en la reserva y enviárselo.
+              </Faq>
+              <Faq q="Agregar un testimonio nuevo">
+                Testimonios → + Add testimonial → sube la foto, escribe la frase y el texto, elige las estrellas y en qué páginas sale → Save. Con las flechas lo pones en el lugar que quieras.
+              </Faq>
+              <Faq q="Descargar el consentimiento de una clienta">
+                Abre la reserva → Intake &amp; consent → Download PDF. En la ficha de la clienta, Consent forms lista todos los que ha firmado.
               </Faq>
               <Faq q="La clienta no vino">Abre la reserva o usa el Dashboard → Mark no-show. Queda contada como ausencia en el Dashboard y en su ficha.</Faq>
               <Faq q="Dar acceso al panel a una empleada">
