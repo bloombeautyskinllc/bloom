@@ -216,8 +216,9 @@ function Experience({ experience }: { experience: Page['experience'] }) {
   const cardClass =
     'group flex flex-col items-center justify-center gap-3.5 rounded-[22px] border border-[#E6DFD5] px-8 py-14 text-center lg:py-10';
 
+  // overflow-x-clip: the spinning Flower's corners poke past the screen edge on phones
   return (
-    <section className="bg-sand py-20 sm:py-[100px]">
+    <section className="overflow-x-clip bg-sand py-20 sm:py-[100px]">
       <div className="container-site">
         <header className="flex flex-col items-start text-left sm:items-center sm:text-center">
           <SectionLabel lines="both">The experience</SectionLabel>

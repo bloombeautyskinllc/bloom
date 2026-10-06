@@ -122,8 +122,9 @@ function TrustCard() {
 }
 
 export default function Approach() {
+  // overflow-x-clip: the spinning Flower's corners poke past the screen edge on phones
   return (
-    <section id="method" className="bg-sand py-20 sm:py-[100px]">
+    <section id="method" className="overflow-x-clip bg-sand py-20 sm:py-[100px]">
       <div className="container-site">
         <header className="flex flex-col items-start text-left sm:items-center sm:text-center">
           <SectionLabel lines="both">Our approach</SectionLabel>
