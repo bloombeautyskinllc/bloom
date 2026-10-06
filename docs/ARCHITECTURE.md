@@ -533,12 +533,18 @@ percentage of what was paid; staff: full by default, or policy, or none). Admins
 amount from the booking page. The worker calls Square with an idempotency key per job and payment, and
 `public.record_refund` tracks the status (webhooks update it). Failed refunds alert staff by email.
 
-**Configuration.** `SQUARE_ACCESS_TOKEN`, `SQUARE_LOCATION_ID`, `SQUARE_APPLICATION_ID` (sandbox ids
-start with `sandbox-`, which selects the sandbox API unless `SQUARE_ENVIRONMENT` says otherwise),
-`SQUARE_WEBHOOK_SIGNATURE_KEY` and optionally `SQUARE_WEBHOOK_URL` (the exact URL registered in Square;
-defaults to `NEXT_PUBLIC_SITE_URL/api/webhooks/square`). Webhook events: `payment.created`,
-`payment.updated`, `refund.created`, `refund.updated`. Online payments cannot be switched on in
-Admin › Settings until Square is configured.
+**Configuration.** One credential set per Square environment: `SQUARE_SANDBOX_ACCESS_TOKEN`,
+`SQUARE_SANDBOX_LOCATION_ID`, `SQUARE_SANDBOX_WEBHOOK_SIGNATURE_KEY` and the same with `PRODUCTION`.
+Admin › Settings › Payments picks the mode (`business_settings.payments_mode`, test by default) used
+for new checkout links; each `payment_links` row stores its `environment`, so syncing, deleting and
+refunding a payment always goes to the environment it was made in, even after switching modes. The
+webhook accepts either signature key (both subscriptions can point to the same URL). The legacy single
+set (`SQUARE_ACCESS_TOKEN`, `SQUARE_LOCATION_ID`, `SQUARE_WEBHOOK_SIGNATURE_KEY`) still works and counts
+for `SQUARE_ENVIRONMENT`, or for the sandbox when `SQUARE_APPLICATION_ID` starts with `sandbox-`.
+`SQUARE_WEBHOOK_URL` is optional (the exact URL registered in Square; defaults to
+`NEXT_PUBLIC_SITE_URL/api/webhooks/square`). Webhook events: `payment.created`, `payment.updated`,
+`refund.created`, `refund.updated`. Online payments cannot be switched on in Admin › Settings until the
+selected mode has credentials.
 
 **Deposit and balance (2026-10-05).** Online bookings charge `business_settings.deposit_percent`
 (40% by default, editable in Settings) unless the treatment has a fixed `deposit_cents`. The rest is

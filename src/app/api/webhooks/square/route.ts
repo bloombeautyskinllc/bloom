@@ -5,7 +5,7 @@ import { serverEnv } from '@/lib/env.server';
 import { processJobs } from '@/lib/jobs/runner';
 import { recordSquarePayment } from '@/lib/payments/links';
 import { verifySquareSignature } from '@/lib/payments/signature';
-import { REFUND_STATUS, type SquarePayment, type SquareRefund } from '@/lib/payments/square';
+import { REFUND_STATUS, squareWebhookKeys, type SquarePayment, type SquareRefund } from '@/lib/payments/square';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -19,12 +19,14 @@ const eventSchema = z.object({
 // Subscribed events: payment.created, payment.updated, refund.created, refund.updated.
 // Payments of the business that are not ours (in-store sales) are acknowledged and ignored.
 export async function POST(request: NextRequest) {
-  const { SQUARE_WEBHOOK_SIGNATURE_KEY: key, SQUARE_WEBHOOK_URL } = serverEnv();
-  if (!key) return NextResponse.json({ error: 'not_configured' }, { status: 503 });
+  // Sandbox and production each have their own subscription and signature key
+  const keys = squareWebhookKeys();
+  if (!keys.length) return NextResponse.json({ error: 'not_configured' }, { status: 503 });
 
   const body = await request.text();
-  const notificationUrl = SQUARE_WEBHOOK_URL ?? `${env.NEXT_PUBLIC_SITE_URL}/api/webhooks/square`;
-  if (!verifySquareSignature(body, request.headers.get('x-square-hmacsha256-signature'), notificationUrl, key)) {
+  const notificationUrl = serverEnv().SQUARE_WEBHOOK_URL ?? `${env.NEXT_PUBLIC_SITE_URL}/api/webhooks/square`;
+  const signature = request.headers.get('x-square-hmacsha256-signature');
+  if (!keys.some((key) => verifySquareSignature(body, signature, notificationUrl, key))) {
     return NextResponse.json({ error: 'invalid_signature' }, { status: 403 });
   }
 

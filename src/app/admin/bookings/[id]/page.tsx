@@ -12,7 +12,7 @@ import { formatDateLong, formatDuration, formatMoney, formatTime } from '@/lib/b
 import { formatPhone } from '@/lib/format/phone';
 import { getPublicSettings } from '@/lib/settings';
 import { payableNow, refreshPendingRefunds } from '@/lib/payments/links';
-import { squareConfig } from '@/lib/payments/square';
+import { activeSquare } from '@/lib/payments/square';
 import { createClient } from '@/lib/supabase/server';
 
 export const metadata = { title: 'Booking' };
@@ -40,7 +40,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
   const { data: b } = await supabase.from('booking_search').select('*').eq('id', id).maybeSingle();
   if (!b) notFound();
 
-  const [{ data: notes }, { data: events }, { data: emails }, { data: money }, { data: payments }, { data: refunds }, { data: openLink }] = await Promise.all([
+  const [{ data: notes }, { data: events }, { data: emails }, { data: money }, { data: payments }, { data: refunds }, { data: openLink }, square] = await Promise.all([
     supabase.from('booking_notes').select('id, body, created_at, author:profiles!author_id(full_name)').eq('booking_id', id).is('deleted_at', null).order('created_at'),
     supabase.from('calendar_events').select('kind, sync_status, last_error, last_synced_at').eq('booking_id', id),
     supabase.from('notifications').select('template, recipient, status, created_at').eq('booking_id', id).order('created_at'),
@@ -48,6 +48,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
     supabase.from('payments').select('id, amount_cents, card_brand, card_last4, receipt_url, paid_at').eq('booking_id', id).order('paid_at'),
     supabase.from('refunds').select('id, amount_cents, status, reason, created_at').eq('booking_id', id).order('created_at'),
     supabase.from('payment_links').select('url, amount_cents, kind').eq('booking_id', id).eq('status', 'open').maybeSingle(),
+    activeSquare(),
   ]);
   const paidCents = money?.amount_paid_cents ?? 0;
   const refundedCents = money?.amount_refunded_cents ?? 0;
@@ -149,7 +150,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
               payments={(payments ?? []).map((p) => ({ id: p.id, amountCents: p.amount_cents, cardBrand: p.card_brand, cardLast4: p.card_last4, receiptUrl: p.receipt_url, paidAt: p.paid_at }))}
               refunds={(refunds ?? []).map((r) => ({ id: r.id, amountCents: r.amount_cents, status: r.status, reason: r.reason, createdAt: r.created_at }))}
               openLink={openLink ? { url: openLink.url, amountCents: openLink.amount_cents, kind: openLink.kind } : null}
-              suggestedCents={money && squareConfig() ? (payableNow(money)?.amountCents ?? null) : null}
+              suggestedCents={money && square ? (payableNow(money)?.amountCents ?? null) : null}
               canRefund={profile.role === 'admin'}
             />
           </Panel>

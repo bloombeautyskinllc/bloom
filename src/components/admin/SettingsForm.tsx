@@ -4,11 +4,13 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { saveSettings, type SettingsInput } from '@/lib/admin/settings-actions';
+import { cn } from '@/lib/utils';
 import { Field, Notice, Panel, buttonClass, inputClass } from './ui';
 
-type Values = Omit<SettingsInput, 'minorsAllowed' | 'paymentsEnabled'> & { minorsAllowed: boolean; paymentsEnabled: boolean };
+type Values = Omit<SettingsInput, 'minorsAllowed' | 'paymentsEnabled' | 'paymentsMode'> & { minorsAllowed: boolean; paymentsEnabled: boolean; paymentsMode: 'sandbox' | 'production' };
 
-export default function SettingsForm({ initial }: { initial: Values }) {
+// squareReady: which Square environments have credentials on this server
+export default function SettingsForm({ initial, squareReady }: { initial: Values; squareReady: Record<Values['paymentsMode'], boolean> }) {
   const t = useTranslations('bo');
   const router = useRouter();
   const [v, setV] = useState(initial);
@@ -88,6 +90,29 @@ export default function SettingsForm({ initial }: { initial: Values }) {
       <Panel title={t('settings.payments')}>
         {check('paymentsEnabled', t('settings.paymentsEnabled'))}
         <p className="mt-2 text-xs text-muted">{t('settings.paymentsNote')}</p>
+        <fieldset className="mt-4">
+          <legend className="mb-2 text-sm font-medium text-ink">{t('settings.paymentsMode')}</legend>
+          <div className="flex flex-wrap gap-2">
+            {(['sandbox', 'production'] as const).map((mode) => (
+              <label
+                key={mode}
+                className={cn(
+                  'flex cursor-pointer flex-col rounded-xl border px-4 py-2.5 text-sm transition',
+                  v.paymentsMode === mode ? 'border-cocoa bg-white text-ink' : 'border-stone text-muted hover:border-taupe',
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <input type="radio" name="paymentsMode" value={mode} checked={v.paymentsMode === mode} onChange={() => setV({ ...v, paymentsMode: mode })} className="h-4 w-4 accent-cocoa" />
+                  {t(mode === 'sandbox' ? 'settings.modeSandbox' : 'settings.modeProduction')}
+                </span>
+                <span className={cn('mt-0.5 pl-6 text-xs', squareReady[mode] ? 'text-muted' : 'text-accent')}>
+                  {t(squareReady[mode] ? 'settings.credentialsSet' : 'settings.credentialsMissing')}
+                </span>
+              </label>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-muted">{t('settings.modeNote')}</p>
+        </fieldset>
         <div className="mt-3 max-w-xs">{text('depositPercent', t('settings.depositPercent'), { ...num, max: 100 })}</div>
         <p className="mt-1 text-xs text-muted">{t('settings.depositNote')}</p>
       </Panel>

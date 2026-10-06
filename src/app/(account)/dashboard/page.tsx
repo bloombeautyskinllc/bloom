@@ -11,7 +11,7 @@ import { bookingCalendarEvent } from '@/lib/booking/calendar-event';
 import { googleCalendarUrl } from '@/lib/calendar/ics';
 import { env } from '@/lib/env';
 import { firstName as getFirstName } from '@/lib/format/name';
-import { squareConfig } from '@/lib/payments/square';
+import { activeSquare } from '@/lib/payments/square';
 import { getPublicSettings } from '@/lib/settings';
 import { createClient } from '@/lib/supabase/server';
 
@@ -36,7 +36,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (error) throw new Error(`bookings load failed: ${error.message}`);
 
   const now = Date.now();
-  const onlinePayments = settings.payments_enabled && squareConfig() !== null;
+  const onlinePayments = settings.payments_enabled && (await activeSquare()) !== null;
   const bookings = (rows ?? []).map((b) => {
     const policy = (b.policy ?? {}) as Policy;
     const items = [...b.items].sort((a, z) => a.sort_order - z.sort_order);

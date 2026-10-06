@@ -4,7 +4,7 @@ import { logAppEvent } from '@/lib/audit/log';
 import { env } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { payableNow, type PayableBooking, type PaymentKind } from './payable';
-import { createPaymentLink, deletePaymentLink, REFUND_STATUS, retrieveOrder, retrievePayment, retrieveRefund, squareConfig, type SquarePayment } from './square';
+import { activeSquare, createPaymentLink, deletePaymentLink, REFUND_STATUS, retrieveOrder, retrievePayment, retrieveRefund, SQUARE_ENVIRONMENTS, squareCredentials, type SquareEnvironment, type SquarePayment } from './square';
 
 export { payableNow, type PaymentKind };
 
@@ -21,7 +21,8 @@ export const paymentReturnUrl = (bookingId: string, kind: PaymentKind) =>
  * The caller must have checked that the current user may pay this booking.
  */
 export async function paymentUrlFor(bookingId: string, { amountCents }: { amountCents?: number } = {}): Promise<PaymentUrlResult> {
-  if (!squareConfig()) return { ok: false, error: 'payments_unavailable' };
+  const square = await activeSquare();
+  if (!square) return { ok: false, error: 'payments_unavailable' };
   const admin = createAdminClient();
 
   const { data: b, error } = await admin
@@ -46,15 +47,16 @@ export async function paymentUrlFor(bookingId: string, { amountCents }: { amount
 
   const { data: open } = await admin
     .from('payment_links')
-    .select('id, url, amount_cents, kind, provider_link_id, provider_order_id')
+    .select('id, url, amount_cents, kind, environment, provider_link_id, provider_order_id')
     .eq('booking_id', booking.id)
     .eq('status', 'open')
     .maybeSingle();
   if (open) {
-    if (open.amount_cents === amount && open.kind === due.kind) return { ok: true, url: open.url, amountCents: amount, kind: due.kind };
-    // Replace a link for another amount, unless it was just paid (then what is owed has changed)
-    if (await syncOrder(open.provider_order_id)) return { ok: false, error: 'not_payable' };
-    await deletePaymentLink(open.provider_link_id);
+    const environment = open.environment as SquareEnvironment;
+    if (open.amount_cents === amount && open.kind === due.kind && environment === square.environment) return { ok: true, url: open.url, amountCents: amount, kind: due.kind };
+    // Replace a link for another amount (or made in the other mode), unless it was just paid (then what is owed has changed)
+    if (await syncOrder(environment, open.provider_order_id)) return { ok: false, error: 'not_payable' };
+    await deletePaymentLink(environment, open.provider_link_id);
     await admin.from('payment_links').update({ status: 'cancelled', cancelled_at: new Date().toISOString() }).eq('id', open.id).eq('status', 'open');
   }
 
@@ -64,7 +66,7 @@ export async function paymentUrlFor(bookingId: string, { amountCents }: { amount
   const itemName = due.kind === 'deposit' ? (amount < booking.total_cents ? `Deposit · ${service}` : service) : paidBefore ? `Balance · ${service}` : service;
   const { data: settings } = await admin.from('business_settings').select('public_email').eq('id', 1).single();
 
-  const link = await createPaymentLink({
+  const link = await createPaymentLink(square.environment, {
     idempotencyKey: crypto.randomUUID(),
     bookingId: booking.id,
     code: booking.code,
@@ -78,6 +80,7 @@ export async function paymentUrlFor(bookingId: string, { amountCents }: { amount
   const { error: insertError } = await admin.from('payment_links').insert({
     booking_id: booking.id,
     kind: due.kind,
+    environment: square.environment,
     provider_link_id: link.id,
     provider_order_id: link.order_id,
     url: link.url,
@@ -85,7 +88,7 @@ export async function paymentUrlFor(bookingId: string, { amountCents }: { amount
   });
   if (insertError) {
     // Another request (a double click) stored its link first: use that one and drop ours
-    await deletePaymentLink(link.id).catch((e) => console.error('[payments] could not delete duplicate link', e));
+    await deletePaymentLink(square.environment, link.id).catch((e) => console.error('[payments] could not delete duplicate link', e));
     const { data: winner } = await admin.from('payment_links').select('url, amount_cents').eq('booking_id', booking.id).eq('status', 'open').maybeSingle();
     if (winner) return { ok: true, url: winner.url, amountCents: winner.amount_cents, kind: due.kind };
     throw new Error(`payment link insert failed: ${insertError.message}`);
@@ -116,13 +119,21 @@ export async function recordSquarePayment(orderId: string, payment: SquarePaymen
   return outcome;
 }
 
+/** Square environment of the link that created this order (payments and refunds stay in that environment). */
+export async function environmentOfOrder(orderId: string): Promise<SquareEnvironment> {
+  const { data, error } = await createAdminClient().from('payment_links').select('environment').eq('provider_order_id', orderId).maybeSingle();
+  if (error) throw new Error(`payment link lookup failed: ${error.message}`);
+  if (!data) throw new Error(`no payment link for Square order ${orderId}`);
+  return data.environment as SquareEnvironment;
+}
+
 /** Pulls the order from Square and records any completed payment. True if something was paid. */
-export async function syncOrder(orderId: string): Promise<boolean> {
-  const order = await retrieveOrder(orderId);
+export async function syncOrder(environment: SquareEnvironment, orderId: string): Promise<boolean> {
+  const order = await retrieveOrder(environment, orderId);
   let paid = false;
   for (const tender of order.tenders ?? []) {
     if (!tender.payment_id) continue;
-    const payment = await retrievePayment(tender.payment_id);
+    const payment = await retrievePayment(environment, tender.payment_id);
     if (payment.status !== 'COMPLETED') continue;
     await recordSquarePayment(orderId, payment);
     paid = true;
@@ -133,6 +144,7 @@ export async function syncOrder(orderId: string): Promise<boolean> {
 type OpenLink = {
   id: string;
   kind: PaymentKind;
+  environment: SquareEnvironment;
   provider_link_id: string;
   provider_order_id: string;
   booking: { status: string; hold_expires_at: string | null } | null;
@@ -148,7 +160,7 @@ export async function reconcileLinks({ bookingId }: { bookingId?: string } = {})
   const admin = createAdminClient();
   let query = admin
     .from('payment_links')
-    .select('id, kind, provider_link_id, provider_order_id, booking:bookings!booking_id(status, hold_expires_at)')
+    .select('id, kind, environment, provider_link_id, provider_order_id, booking:bookings!booking_id(status, hold_expires_at)')
     .eq('status', 'open')
     .order('created_at')
     .limit(25);
@@ -161,7 +173,7 @@ export async function reconcileLinks({ bookingId }: { bookingId?: string } = {})
   const result = { checked: 0, paid: 0, closed: 0 };
   for (const link of (data ?? []) as unknown as OpenLink[]) {
     result.checked++;
-    if (await syncOrder(link.provider_order_id)) {
+    if (await syncOrder(link.environment, link.provider_order_id)) {
       result.paid++;
       continue;
     }
@@ -173,11 +185,11 @@ export async function reconcileLinks({ bookingId }: { bookingId?: string } = {})
         : b.status === 'cancelled' || b.status === 'expired');
     if (!stale) continue;
 
-    await deletePaymentLink(link.provider_link_id);
+    await deletePaymentLink(link.environment, link.provider_link_id);
     await admin.from('payment_links').update({ status: 'cancelled', cancelled_at: new Date().toISOString() }).eq('id', link.id).eq('status', 'open');
     result.closed++;
     // A payment that landed between the check and the deletion is still recorded (and refunded if the slot is gone)
-    if (await syncOrder(link.provider_order_id)) result.paid++;
+    if (await syncOrder(link.environment, link.provider_order_id)) result.paid++;
   }
   return result;
 }
@@ -187,11 +199,11 @@ export async function reconcileLinks({ bookingId }: { bookingId?: string } = {})
  * this; this covers a missed or unconfigured webhook). Refunds settle within seconds to minutes.
  */
 export async function refreshPendingRefunds({ bookingId }: { bookingId?: string } = {}): Promise<number> {
-  if (!squareConfig()) return 0;
+  if (!SQUARE_ENVIRONMENTS.some((e) => squareCredentials(e))) return 0;
   const admin = createAdminClient();
   let query = admin
     .from('refunds')
-    .select('provider_refund_id, amount_cents, payment:payments!payment_id(provider_payment_id)')
+    .select('provider_refund_id, amount_cents, payment:payments!payment_id(provider_payment_id, provider_order_id)')
     .eq('status', 'pending')
     .lt('created_at', new Date(Date.now() - 30_000).toISOString())
     .limit(20);
@@ -200,9 +212,10 @@ export async function refreshPendingRefunds({ bookingId }: { bookingId?: string 
   if (error) throw new Error(`refunds lookup failed: ${error.message}`);
 
   let updated = 0;
-  for (const r of (data ?? []) as unknown as { provider_refund_id: string; amount_cents: number; payment: { provider_payment_id: string } | null }[]) {
-    const refund = await retrieveRefund(r.provider_refund_id);
-    if (refund.status === 'PENDING' || !r.payment) continue;
+  for (const r of (data ?? []) as unknown as { provider_refund_id: string; amount_cents: number; payment: { provider_payment_id: string; provider_order_id: string | null } | null }[]) {
+    if (!r.payment?.provider_order_id) continue;
+    const refund = await retrieveRefund(await environmentOfOrder(r.payment.provider_order_id), r.provider_refund_id);
+    if (refund.status === 'PENDING') continue;
     const { error: recordError } = await admin.rpc('record_refund', {
       p_provider_payment_id: r.payment.provider_payment_id,
       p_provider_refund_id: r.provider_refund_id,

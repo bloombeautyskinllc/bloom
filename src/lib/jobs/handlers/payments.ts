@@ -1,6 +1,6 @@
 import 'server-only';
 import { z } from 'zod';
-import { reconcileLinks, refreshPendingRefunds } from '@/lib/payments/links';
+import { environmentOfOrder, reconcileLinks, refreshPendingRefunds } from '@/lib/payments/links';
 import { REFUND_STATUS, refundPayment } from '@/lib/payments/square';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { Job } from '../types';
@@ -31,6 +31,7 @@ const refundPayload = z.object({
 type PaymentRow = {
   id: string;
   provider_payment_id: string;
+  provider_order_id: string | null;
   amount_cents: number;
   refunds: { amount_cents: number; status: string; created_at: string }[];
 };
@@ -47,7 +48,7 @@ export async function paymentRefund(job: Job) {
 
   let query = admin
     .from('payments')
-    .select('id, provider_payment_id, amount_cents, refunds(amount_cents, status, created_at)')
+    .select('id, provider_payment_id, provider_order_id, amount_cents, refunds(amount_cents, status, created_at)')
     .eq('booking_id', p.booking_id)
     .order('paid_at', { ascending: false });
   if (p.payment_id) query = query.eq('id', p.payment_id);
@@ -63,7 +64,9 @@ export async function paymentRefund(job: Job) {
     const amount = Math.min(left, payment.amount_cents - refundedBefore);
     if (amount <= 0) continue;
 
-    const refund = await refundPayment({ idempotencyKey: `refund:${job.id}:${payment.id}`, paymentId: payment.provider_payment_id, amountCents: amount, reason: p.reason });
+    if (!payment.provider_order_id) throw new Error(`payment ${payment.id} has no Square order`);
+    // Refunded in the environment the payment was taken in (a test payment stays in the sandbox)
+    const refund = await refundPayment(await environmentOfOrder(payment.provider_order_id), { idempotencyKey: `refund:${job.id}:${payment.id}`, paymentId: payment.provider_payment_id, amountCents: amount, reason: p.reason });
     const { error: recordError } = await admin.rpc('record_refund', {
       p_provider_payment_id: payment.provider_payment_id,
       p_provider_refund_id: refund.id,

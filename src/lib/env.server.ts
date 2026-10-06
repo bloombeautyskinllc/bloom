@@ -15,7 +15,15 @@ const serverEnvSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   // Resend delivery webhooks (whsec_...), optional until the webhook is configured in Resend
   RESEND_WEBHOOK_SECRET: z.string().optional(),
-  // Square payments (optional until online payments are turned on in the back office)
+  // Square payments (optional until online payments are turned on in the back office). One set per
+  // environment; the back office switches between test (sandbox) and live (production) mode.
+  SQUARE_SANDBOX_ACCESS_TOKEN: z.string().optional(),
+  SQUARE_SANDBOX_LOCATION_ID: z.string().optional(),
+  SQUARE_SANDBOX_WEBHOOK_SIGNATURE_KEY: z.string().optional(),
+  SQUARE_PRODUCTION_ACCESS_TOKEN: z.string().optional(),
+  SQUARE_PRODUCTION_LOCATION_ID: z.string().optional(),
+  SQUARE_PRODUCTION_WEBHOOK_SIGNATURE_KEY: z.string().optional(),
+  // Legacy single set: counts for the environment given by SQUARE_ENVIRONMENT (or the application id)
   SQUARE_ENVIRONMENT: z.enum(['sandbox', 'production']).optional(),
   SQUARE_APPLICATION_ID: z.string().optional(),
   SQUARE_ACCESS_TOKEN: z.string().optional(),

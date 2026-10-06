@@ -3,6 +3,7 @@ import GoogleCalendarCard from '@/components/account/GoogleCalendarCard';
 import SettingsForm from '@/components/admin/SettingsForm';
 import { PageHeader, Panel, Stat } from '@/components/admin/ui';
 import { requireAdmin } from '@/lib/auth/session';
+import { squareCredentials } from '@/lib/payments/square';
 import { createClient } from '@/lib/supabase/server';
 
 export const metadata = { title: 'Settings' };
@@ -55,8 +56,10 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             reviewUrl: s.review_url ?? '',
             reviewDelayHours: s.review_request_delay_hours,
             paymentsEnabled: s.payments_enabled,
+            paymentsMode: s.payments_mode === 'production' ? 'production' : 'sandbox',
             depositPercent: s.deposit_percent,
           }}
+          squareReady={{ sandbox: squareCredentials('sandbox') !== null, production: squareCredentials('production') !== null }}
         />
 
         <div className="flex flex-col gap-4 xl:sticky xl:top-8 xl:self-start">
