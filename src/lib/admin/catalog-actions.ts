@@ -5,7 +5,16 @@ import { z } from 'zod';
 import { getSession } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 
-export type CatalogResult = { ok: true } | { ok: false; error: 'forbidden' | 'invalid' | 'duplicate' | 'generic' };
+// `field` names the first input that failed validation, so the form can point at it
+export type CatalogResult = { ok: true } | { ok: false; error: 'forbidden' | 'invalid' | 'duplicate' | 'generic'; field?: string };
+
+const invalid = (e: z.ZodError): CatalogResult => ({ ok: false, error: 'invalid', field: e.issues[0]?.path[0]?.toString() });
+
+function dbError(where: string, error: { code: string; message: string }): CatalogResult {
+  if (error.code === '23505') return { ok: false, error: 'duplicate' };
+  console.error(`[catalog] ${where} failed:`, error.code, error.message);
+  return { ok: false, error: 'generic' };
+}
 
 async function requireAdminSession() {
   const session = await getSession();
@@ -14,8 +23,22 @@ async function requireAdminSession() {
 
 // The public site reads the catalog too: refresh everything that shows it
 function refreshCatalog() {
-  for (const path of ['/admin/catalog', '/booking', '/admin/bookings/new']) revalidatePath(path);
+  for (const path of ['/admin/catalog', '/booking', '/admin/bookings/new', '/admin/team']) revalidatePath(path);
   revalidatePath('/(marketing)/treatments/[slug]', 'page');
+}
+
+type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+async function nextTreatmentSortOrder(supabase: Supabase, categoryId: string) {
+  const { data: last } = await supabase
+    .from('treatments')
+    .select('sort_order')
+    .eq('category_id', categoryId)
+    .is('deleted_at', null)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (last?.sort_order ?? 0) + 10;
 }
 
 const money = z.number().int().min(0).max(10_000_000);
@@ -46,7 +69,7 @@ const treatmentSchema = z.object({
 export async function saveTreatment(input: z.input<typeof treatmentSchema>): Promise<CatalogResult> {
   if (!(await requireAdminSession())) return { ok: false, error: 'forbidden' };
   const parsed = treatmentSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: 'invalid' };
+  if (!parsed.success) return invalid(parsed.error);
   const v = parsed.data;
   const row = {
     category_id: v.categoryId,
@@ -68,8 +91,19 @@ export async function saveTreatment(input: z.input<typeof treatmentSchema>): Pro
     needs_review: v.needsReview,
   };
   const supabase = await createClient();
-  const { error } = v.id ? await supabase.from('treatments').update(row).eq('id', v.id) : await supabase.from('treatments').insert(row);
-  if (error) return { ok: false, error: error.code === '23505' ? 'duplicate' : 'generic' };
+  let error;
+  if (v.id) {
+    // Moving to another category puts the treatment at the end of that category
+    const { data: current } = await supabase.from('treatments').select('category_id').eq('id', v.id).single();
+    const moved = current && current.category_id !== v.categoryId;
+    ({ error } = await supabase
+      .from('treatments')
+      .update(moved ? { ...row, sort_order: await nextTreatmentSortOrder(supabase, v.categoryId) } : row)
+      .eq('id', v.id));
+  } else {
+    ({ error } = await supabase.from('treatments').insert({ ...row, sort_order: await nextTreatmentSortOrder(supabase, v.categoryId) }));
+  }
+  if (error) return dbError('saveTreatment', error);
 
   // A new treatment is performed by every active specialist until the team page says otherwise
   if (!v.id) {
@@ -79,6 +113,42 @@ export async function saveTreatment(input: z.input<typeof treatmentSchema>): Pro
       await supabase.from('specialist_treatments').upsert(specialists.map((s) => ({ specialist_id: s.id, treatment_id: created.id })), { ignoreDuplicates: true });
     }
   }
+  refreshCatalog();
+  return { ok: true };
+}
+
+// Saves the order of a category as dragged in the catalog (10, 20, 30…). The list must be exactly the
+// category's current treatments, so a stale page (someone added or deleted one meanwhile) is rejected.
+export async function reorderTreatments(categoryId: string, ids: string[]): Promise<CatalogResult> {
+  if (!(await requireAdminSession())) return { ok: false, error: 'forbidden' };
+  if (!z.uuid().safeParse(categoryId).success || !z.array(z.uuid()).max(200).safeParse(ids).success) return { ok: false, error: 'invalid' };
+  const supabase = await createClient();
+  const { data: current, error: loadError } = await supabase.from('treatments').select('id, sort_order').eq('category_id', categoryId).is('deleted_at', null);
+  if (loadError) return dbError('reorderTreatments', loadError);
+  const sortOrder = new Map((current ?? []).map((x) => [x.id, x.sort_order]));
+  if (new Set(ids).size !== ids.length || ids.length !== sortOrder.size || !ids.every((id) => sortOrder.has(id))) return { ok: false, error: 'invalid' };
+
+  const results = await Promise.all(
+    ids.flatMap((id, i) => (sortOrder.get(id) === (i + 1) * 10 ? [] : [supabase.from('treatments').update({ sort_order: (i + 1) * 10 }).eq('id', id)])),
+  );
+  const failed = results.find((r) => r.error)?.error;
+  if (failed) return dbError('reorderTreatments', failed);
+  refreshCatalog();
+  return { ok: true };
+}
+
+// Soft delete, like options: past and upcoming bookings keep pointing at the treatment. The slug is freed for reuse.
+export async function deleteTreatment(id: string): Promise<CatalogResult> {
+  if (!(await requireAdminSession())) return { ok: false, error: 'forbidden' };
+  if (!z.uuid().safeParse(id).success) return { ok: false, error: 'invalid' };
+  const supabase = await createClient();
+  const { data: treatment } = await supabase.from('treatments').select('slug').eq('id', id).is('deleted_at', null).maybeSingle();
+  if (!treatment) return { ok: false, error: 'invalid' };
+  const { error } = await supabase
+    .from('treatments')
+    .update({ deleted_at: new Date().toISOString(), is_active: false, slug: `${treatment.slug.slice(0, 60).replace(/-+$/, '')}-deleted-${id.slice(0, 8)}` })
+    .eq('id', id);
+  if (error) return dbError('deleteTreatment', error);
   refreshCatalog();
   return { ok: true };
 }
@@ -99,7 +169,7 @@ const optionSchema = z.object({
 export async function saveOption(input: z.input<typeof optionSchema>): Promise<CatalogResult> {
   if (!(await requireAdminSession())) return { ok: false, error: 'forbidden' };
   const parsed = optionSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: 'invalid' };
+  if (!parsed.success) return invalid(parsed.error);
   const v = parsed.data;
   const row = {
     treatment_id: v.treatmentId,
@@ -126,7 +196,7 @@ export async function saveOption(input: z.input<typeof optionSchema>): Promise<C
       .maybeSingle();
     ({ error } = await supabase.from('treatment_options').insert({ ...row, sort_order: (last?.sort_order ?? 0) + 10 }));
   }
-  if (error) return { ok: false, error: error.code === '23505' ? 'duplicate' : 'generic' };
+  if (error) return dbError('saveOption', error);
   await clampMinOptions(supabase, v.treatmentId);
   refreshCatalog();
   return { ok: true };
@@ -154,7 +224,7 @@ export async function deleteOption(id: string): Promise<CatalogResult> {
     .from('treatment_options')
     .update({ deleted_at: new Date().toISOString(), is_active: false, slug: `${option.slug.slice(0, 60).replace(/-+$/, '')}-deleted-${id.slice(0, 8)}` })
     .eq('id', id);
-  if (error) return { ok: false, error: 'generic' };
+  if (error) return dbError('deleteOption', error);
   await clampMinOptions(supabase, option.treatment_id);
   refreshCatalog();
   return { ok: true };
@@ -171,12 +241,12 @@ const categorySchema = z.object({
 export async function saveCategory(input: z.input<typeof categorySchema>): Promise<CatalogResult> {
   if (!(await requireAdminSession())) return { ok: false, error: 'forbidden' };
   const parsed = categorySchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: 'invalid' };
+  if (!parsed.success) return invalid(parsed.error);
   const { error } = await (await createClient())
     .from('service_categories')
     .update({ name: parsed.data.name, description: parsed.data.description || null, color: parsed.data.color, is_active: parsed.data.isActive })
     .eq('id', parsed.data.id);
-  if (error) return { ok: false, error: 'generic' };
+  if (error) return dbError('saveCategory', error);
   refreshCatalog();
   revalidatePath('/admin/calendar');
   return { ok: true };

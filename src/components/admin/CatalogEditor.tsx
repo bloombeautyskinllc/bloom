@@ -1,10 +1,19 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  useTransition,
+  type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { HiChevronDown } from 'react-icons/hi';
-import { deleteOption, saveCategory, saveOption, saveTreatment } from '@/lib/admin/catalog-actions';
+import { MdDragIndicator } from 'react-icons/md';
+import { deleteOption, deleteTreatment, reorderTreatments, saveCategory, saveOption, saveTreatment } from '@/lib/admin/catalog-actions';
 import { formatDuration, formatMoney } from '@/lib/booking/format';
 import { cn } from '@/lib/utils';
 import { Field, Notice, buttonClass, inputClass } from './ui';
@@ -74,23 +83,43 @@ const slugify = (s: string) =>
     .replace(/^-|-$/g, '')
     .slice(0, 80);
 
+// Server field name → label key in bo.catalog, to say which input was rejected
+const FIELD_LABELS = {
+  name: 'name',
+  slug: 'slug',
+  description: 'description',
+  priceCents: 'price',
+  priceType: 'priceType',
+  durationMinutes: 'duration',
+  extraMinutes: 'extraMinutes',
+  bufferBeforeMin: 'bufferBefore',
+  bufferAfterMin: 'bufferAfter',
+  depositPercent: 'deposit',
+  minOptions: 'minOptions',
+  maxOptions: 'maxOptions',
+  groupLabel: 'group',
+  color: 'color',
+} as const;
+
 function useSaver() {
   const t = useTranslations('bo');
   const router = useRouter();
   const [pending, start] = useTransition();
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
-  const save = (fn: () => Promise<{ ok: boolean; error?: string }>, onDone?: () => void) =>
+  const errorText = (r: { error?: string; field?: string }) => {
+    if (r.error === 'forbidden') return t('common.forbidden');
+    if (r.error === 'duplicate') return t('catalog.duplicate');
+    const label = r.error === 'invalid' && r.field ? FIELD_LABELS[r.field as keyof typeof FIELD_LABELS] : undefined;
+    return label ? t('catalog.invalidField', { field: t(`catalog.${label}`) }) : t('common.error');
+  };
+  const save = (fn: () => Promise<{ ok: boolean; error?: string; field?: string }>, onDone?: () => void) =>
     start(async () => {
       const r = await fn();
       if (r.ok) {
         setMessage({ tone: 'success', text: t('catalog.saved') });
         onDone?.();
         router.refresh();
-      } else
-        setMessage({
-          tone: 'error',
-          text: r.error === 'forbidden' ? t('common.forbidden') : r.error === 'duplicate' ? t('catalog.duplicate') : t('common.error'),
-        });
+      } else setMessage({ tone: 'error', text: errorText(r) });
     });
   return { pending, message, save };
 }
@@ -109,11 +138,14 @@ function Check({ label, checked, onChange }: { label: string; checked: boolean; 
 // -----------------------------------------------------------------------------
 function TreatmentForm({
   categoryId,
+  categories,
   initial,
   depositPercent,
   onDone,
 }: {
   categoryId: string;
+  /** Categories the treatment can be moved to (editing only) */
+  categories?: { id: string; name: string }[];
   initial?: CatalogTreatmentRow;
   /** Business default (Settings), shown when the treatment has no percentage of its own */
   depositPercent: number;
@@ -122,7 +154,10 @@ function TreatmentForm({
   const t = useTranslations('bo.catalog');
   const tc = useTranslations('bo.common');
   const { pending, message, save } = useSaver();
+  const router = useRouter();
+  const [deleting, startDelete] = useTransition();
   const [f, setF] = useState({
+    categoryId,
     name: initial?.name ?? '',
     slug: initial?.slug ?? '',
     description: initial?.description ?? '',
@@ -157,8 +192,9 @@ function TreatmentForm({
           () =>
             saveTreatment({
               id: initial?.id,
-              categoryId,
-              slug: f.slug || slugify(f.name),
+              categoryId: f.categoryId,
+              // A hand-typed URL name ("Hydra Facial") is normalized like the automatic one
+              slug: slugify(f.slug) || slugify(f.name),
               name: f.name,
               description: f.description,
               includes: f.includes.split('\n').map((x) => x.trim()).filter(Boolean),
@@ -182,15 +218,26 @@ function TreatmentForm({
     >
       <div className="sm:col-span-2 lg:col-span-3">
         <Field label={t('name')} htmlFor={`${id}-name`}>
-          <input id={`${id}-name`} required value={f.name} onChange={up('name')} className={inputClass} />
+          <input id={`${id}-name`} required minLength={2} maxLength={120} value={f.name} onChange={up('name')} className={inputClass} />
         </Field>
       </div>
       <Field label={t('slug')} htmlFor={`${id}-slug`}>
         <input id={`${id}-slug`} value={f.slug} placeholder={slugify(f.name)} onChange={up('slug')} className={inputClass} />
       </Field>
+      {initial && categories && categories.length > 1 && (
+        <Field label={t('category')} htmlFor={`${id}-cat`} hint={f.categoryId !== categoryId ? t('categoryMoveHint') : undefined}>
+          <select id={`${id}-cat`} value={f.categoryId} onChange={up('categoryId')} className={inputClass}>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
       <div className="sm:col-span-2 lg:col-span-4">
         <Field label={t('description')} htmlFor={`${id}-desc`}>
-          <textarea id={`${id}-desc`} rows={2} value={f.description} onChange={up('description')} className={`${inputClass} h-auto py-2`} />
+          <textarea id={`${id}-desc`} rows={2} maxLength={1000} value={f.description} onChange={up('description')} className={`${inputClass} h-auto py-2`} />
         </Field>
       </div>
       <Field label={t('price')} htmlFor={`${id}-price`}>
@@ -236,9 +283,28 @@ function TreatmentForm({
         <Check label={t('bestSeller')} checked={f.isBestSeller} onChange={(v) => setF({ ...f, isBestSeller: v })} />
       </div>
       <div className="flex flex-wrap items-center gap-2 sm:col-span-2 lg:col-span-4">
-        <button type="submit" disabled={pending || rangeInvalid} className={buttonClass.primary}>
+        <button type="submit" disabled={pending || deleting || rangeInvalid} className={buttonClass.primary}>
           {pending ? tc('saving') : tc('save')}
         </button>
+        {initial && (
+          <button
+            type="button"
+            disabled={pending || deleting}
+            className={`${buttonClass.ghost} text-red-800`}
+            onClick={() => {
+              if (!window.confirm(t('deleteTreatmentConfirm', { name: initial.name }))) return;
+              startDelete(async () => {
+                const r = await deleteTreatment(initial.id);
+                if (r.ok) {
+                  onDone();
+                  router.refresh();
+                } else window.alert(r.error === 'forbidden' ? tc('forbidden') : tc('error'));
+              });
+            }}
+          >
+            {tc('delete')}
+          </button>
+        )}
         {message && <Notice tone={message.tone}>{message.text}</Notice>}
       </div>
     </form>
@@ -376,6 +442,206 @@ function CategoryHeader({ category }: { category: CatalogCategoryRow }) {
   );
 }
 
+// Drag animation: the lifted row follows the pointer while the others glide out of its way; on drop (or a
+// keyboard move) every row slides from where it was to its new place (FLIP)
+const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+const LIFT_SHADOW = '0 18px 40px -16px rgba(35, 27, 21, 0.35), 0 4px 12px -6px rgba(35, 27, 21, 0.18)';
+const prefersReducedMotion = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+type Drag = {
+  id: string;
+  from: number;
+  /** Index the row would land on (among the other rows) */
+  to: number;
+  /** Pointer travel since the drag started */
+  dy: number;
+};
+
+/**
+ * Treatments of one category, reordered by dragging the dotted handle (mouse or touch) or with the arrow keys on it.
+ * The new order shows at once and is saved in the background; it reverts if the save fails.
+ */
+function TreatmentList({
+  category,
+  categories,
+  depositPercent,
+  open,
+  setOpen,
+}: {
+  category: CatalogCategoryRow;
+  categories: CatalogCategoryRow[];
+  depositPercent: number;
+  open: string | null;
+  setOpen: (id: string | null) => void;
+}) {
+  const t = useTranslations('bo.catalog');
+  const tc = useTranslations('bo.common');
+  const byId = new Map(category.treatments.map((x) => [x.id, x]));
+  // Order chosen here, ahead of the server; null = the server order
+  const [localIds, setLocalIds] = useState<string[] | null>(null);
+  const [drag, setDrag] = useState<Drag | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  // Measured when a drag starts: where the dragged row is and the middle of every other row
+  const start = useRef({ y: 0, center: 0, height: 0, middles: [] as number[] });
+  // Row positions just before an order change, consumed by the FLIP effect below
+  const before = useRef<{ tops: Map<string, number>; dropped?: string } | null>(null);
+
+  // Rows added or removed meanwhile (new treatment, moved to another category) still show up or disappear
+  const serverIds = category.treatments.map((x) => x.id);
+  const baseIds = localIds ? [...localIds.filter((id) => byId.has(id)), ...serverIds.filter((id) => !localIds.includes(id))] : serverIds;
+  const placed = (id: string, to: number) => {
+    const next = baseIds.filter((x) => x !== id);
+    next.splice(to, 0, id);
+    return next;
+  };
+
+  const rows = () => Array.from(listRef.current?.children ?? []) as HTMLElement[];
+  const measure = () => new Map(rows().map((row) => [row.dataset.id!, row.getBoundingClientRect().top]));
+
+  useLayoutEffect(() => {
+    const snapshot = before.current;
+    if (!snapshot) return;
+    before.current = null;
+    if (prefersReducedMotion()) return;
+    for (const row of rows()) {
+      const id = row.dataset.id!;
+      const was = snapshot.tops.get(id);
+      if (was === undefined) continue;
+      const dy = was - row.getBoundingClientRect().top;
+      const dropped = id === snapshot.dropped;
+      if (Math.abs(dy) < 0.5 && !dropped) continue;
+      row.animate(
+        dropped
+          ? [
+              { transform: `translateY(${dy}px) scale(1.015)`, boxShadow: LIFT_SHADOW },
+              { transform: 'none', boxShadow: '0 0 0 0 rgba(35, 27, 21, 0)' },
+            ]
+          : [{ transform: `translateY(${dy}px)` }, { transform: 'none' }],
+        { duration: dropped ? 380 : 300, easing: EASE },
+      );
+    }
+  });
+
+  const commit = (next: string[], dropped?: string) => {
+    before.current = { tops: measure(), dropped };
+    setDrag(null);
+    if (next.join() === baseIds.join()) return;
+    const previous = localIds;
+    setLocalIds(next);
+    void reorderTreatments(category.id, next).then((r) => {
+      if (r.ok) return;
+      setLocalIds(previous);
+      window.alert(r.error === 'forbidden' ? tc('forbidden') : tc('error'));
+    });
+  };
+
+  const onPointerDown = (id: string) => (e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const all = rows();
+    const self = all.find((row) => row.dataset.id === id)!.getBoundingClientRect();
+    start.current = {
+      y: e.clientY,
+      center: self.top + self.height / 2,
+      height: self.height,
+      middles: all
+        .filter((row) => row.dataset.id !== id)
+        .map((row) => {
+          const r = row.getBoundingClientRect();
+          return r.top + r.height / 2;
+        }),
+    };
+    const from = baseIds.indexOf(id);
+    setDrag({ id, from, to: from, dy: 0 });
+  };
+  const onPointerMove = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!drag) return;
+    const dy = e.clientY - start.current.y;
+    const center = start.current.center + dy;
+    setDrag({ ...drag, dy, to: start.current.middles.filter((m) => m < center).length });
+  };
+  const onPointerUp = () => {
+    if (drag) commit(placed(drag.id, drag.to), drag.id);
+  };
+  const onKeyDown = (id: string) => (e: ReactKeyboardEvent<HTMLButtonElement>) => {
+    const from = baseIds.indexOf(id);
+    const to = e.key === 'ArrowUp' ? from - 1 : e.key === 'ArrowDown' ? from + 1 : -1;
+    if (to < 0 || to >= baseIds.length) return;
+    e.preventDefault();
+    commit(placed(id, to));
+  };
+
+  // While dragging, the rows between the old and the new place move one slot to make room
+  const rowStyle = (id: string, index: number): CSSProperties | undefined => {
+    if (!drag) return undefined;
+    if (id === drag.id)
+      return {
+        translate: `0 ${drag.dy}px`,
+        scale: '1.015',
+        boxShadow: LIFT_SHADOW,
+        position: 'relative',
+        zIndex: 10,
+        transition: `scale 200ms ${EASE}, box-shadow 200ms ${EASE}`,
+      };
+    const shift = drag.from < drag.to && index > drag.from && index <= drag.to ? -1 : drag.to < drag.from && index >= drag.to && index < drag.from ? 1 : 0;
+    return { translate: `0 ${shift * start.current.height}px`, transition: `translate 260ms ${EASE}` };
+  };
+
+  return (
+    <ul ref={listRef} className="divide-y divide-stone">
+      {baseIds.map((id, index) => {
+        const x = byId.get(id)!;
+        const expanded = open === x.id;
+        const dragging = drag?.id === x.id;
+        return (
+          <li key={x.id} data-id={x.id} style={rowStyle(x.id, index)} className={cn('py-1', dragging && 'rounded-xl bg-cream')}>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                aria-label={t('dragToReorder', { name: x.name })}
+                title={t('dragToReorder', { name: x.name })}
+                onPointerDown={onPointerDown(x.id)}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUp}
+                onPointerCancel={() => drag && commit(baseIds, drag.id)}
+                onKeyDown={onKeyDown(x.id)}
+                className={cn('shrink-0 touch-none rounded-md p-1.5 text-muted transition hover:bg-stone/60 hover:text-ink', dragging ? 'cursor-grabbing' : 'cursor-grab')}
+              >
+                <MdDragIndicator className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setOpen(expanded ? null : x.id)}
+                aria-expanded={expanded}
+                className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1 rounded-lg px-2 py-2.5 text-left text-sm transition hover:bg-sand/60"
+              >
+                <span className={cn('min-w-0 flex-1 font-medium', x.isActive ? 'text-ink' : 'text-muted line-through')}>{x.name}</span>
+                {x.durationMinutes === null && <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] text-red-900">{t('noDuration')}</span>}
+                <span className="w-24 tabular-nums text-muted">{x.durationMinutes ? formatDuration(x.durationMinutes) : '—'}</span>
+                <span className="w-32 text-right text-xs tabular-nums text-muted">
+                  {t('depositShort', { amount: depositAmountLabel(x.priceCents, x.depositPercent ?? depositPercent) })}
+                </span>
+                <span className="w-24 text-right tabular-nums text-ink">
+                  {x.priceType === 'from' ? 'from ' : ''}
+                  {formatMoney(x.priceCents)}
+                </span>
+                <HiChevronDown className={cn('h-4 w-4 text-muted transition', expanded && 'rotate-180')} />
+              </button>
+            </div>
+            {expanded && (
+              <div className="flex flex-col gap-4 px-2 pb-4 pt-2">
+                <TreatmentForm categoryId={category.id} categories={categories} initial={x} depositPercent={depositPercent} onDone={() => setOpen(null)} />
+                <OptionsEditor treatment={x} />
+              </div>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export default function CatalogEditor({ categories, depositPercent }: { categories: CatalogCategoryRow[]; depositPercent: number }) {
   const t = useTranslations('bo.catalog');
   const [open, setOpen] = useState<string | null>(null);
@@ -393,39 +659,7 @@ export default function CatalogEditor({ categories, depositPercent }: { categori
             <CategoryHeader category={c} />
           </div>
 
-          <ul className="divide-y divide-stone">
-            {c.treatments.map((x) => {
-              const expanded = open === x.id;
-              return (
-                <li key={x.id} className="py-1">
-                  <button
-                    type="button"
-                    onClick={() => setOpen(expanded ? null : x.id)}
-                    aria-expanded={expanded}
-                    className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 rounded-lg px-2 py-2.5 text-left text-sm transition hover:bg-sand/60"
-                  >
-                    <span className={cn('min-w-0 flex-1 font-medium', x.isActive ? 'text-ink' : 'text-muted line-through')}>{x.name}</span>
-                    {x.durationMinutes === null && <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] text-red-900">{t('noDuration')}</span>}
-                    <span className="w-24 tabular-nums text-muted">{x.durationMinutes ? formatDuration(x.durationMinutes) : '—'}</span>
-                    <span className="w-32 text-right text-xs tabular-nums text-muted">
-                      {t('depositShort', { amount: depositAmountLabel(x.priceCents, x.depositPercent ?? depositPercent) })}
-                    </span>
-                    <span className="w-24 text-right tabular-nums text-ink">
-                      {x.priceType === 'from' ? 'from ' : ''}
-                      {formatMoney(x.priceCents)}
-                    </span>
-                    <HiChevronDown className={cn('h-4 w-4 text-muted transition', expanded && 'rotate-180')} />
-                  </button>
-                  {expanded && (
-                    <div className="flex flex-col gap-4 px-2 pb-4 pt-2">
-                      <TreatmentForm categoryId={c.id} initial={x} depositPercent={depositPercent} onDone={() => setOpen(null)} />
-                      <OptionsEditor treatment={x} />
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+          <TreatmentList category={c} categories={categories} depositPercent={depositPercent} open={open} setOpen={setOpen} />
 
           {adding === c.id ? (
             <div className="mt-4">

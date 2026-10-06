@@ -383,7 +383,12 @@
     "noOptions": "No options yet. Clients book this treatment as is.",
     "optionVisible": "Visible",
     "deleteOptionConfirm": "Delete “{name}”? It disappears from the site and the booking form. Past bookings keep it.",
-    "duplicate": "That URL name is already in use. Try a different name."
+    "duplicate": "That URL name is already in use. Try a different name.",
+    "invalidField": "Check “{field}”: the value isn’t valid.",
+    "category": "Category",
+    "categoryMoveHint": "Saving moves it to the end of the new category",
+    "dragToReorder": "Drag to reorder {name} (or use the arrow keys)",
+    "deleteTreatmentConfirm": "Delete “{name}”? It disappears from the site and the booking form. Existing bookings keep it."
   },
   "testimonials": {
     "title": "Testimonials",

@@ -12,7 +12,8 @@ export default async function CatalogPage() {
   const supabase = await createClient();
   const [{ data: categories }, { data: treatments }, { data: options }, { data: settings }] = await Promise.all([
     supabase.from('service_categories').select('*').is('deleted_at', null).order('sort_order'),
-    supabase.from('treatments').select('*').is('deleted_at', null).order('sort_order'),
+    // Ties (seeded rows) break the same way every time, so a drag starts from what the admin sees
+    supabase.from('treatments').select('*').is('deleted_at', null).order('sort_order').order('created_at'),
     supabase.from('treatment_options').select('*').is('deleted_at', null).order('sort_order'),
     supabase.from('business_settings').select('deposit_percent').eq('id', 1).single(),
   ]);
