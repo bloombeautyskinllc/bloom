@@ -1,3 +1,4 @@
+import { after } from 'next/server';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -9,6 +10,7 @@ import PaymentPending from '@/components/booking/PaymentPending';
 import { routes } from '@/data/site';
 import { requireOnboardedProfile } from '@/lib/auth/session';
 import { formatMoney } from '@/lib/booking/format';
+import { processJobs } from '@/lib/jobs/runner';
 import { reconcileLinks } from '@/lib/payments/links';
 import { createClient } from '@/lib/supabase/server';
 
@@ -36,6 +38,8 @@ export default async function PaymentReturnPage({ searchParams }: { searchParams
   let waiting = b.status === 'pending_payment';
   try {
     const result = await reconcileLinks({ bookingId: b.id });
+    // The payment confirmed the booking and queued its emails and calendar sync: send them now, not at the next cron tick
+    if (result.paid > 0) after(() => processJobs({ limit: 10 }).catch((e) => console.error('[jobs] inline run failed', e)));
     b = (await load()) ?? b;
     const settled = b.status === 'confirmed' || b.status === 'completed';
     waiting = b.status === 'pending_payment' || (forBalance && settled && result.checked > result.paid);
