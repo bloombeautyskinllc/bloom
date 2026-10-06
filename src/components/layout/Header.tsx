@@ -28,8 +28,12 @@ function SocialLinks() {
 function Hours() {
   return (
     <>
-      <span className="text-muted">{site.hours.days}</span>
-      <span className="text-ink">[{site.hours.time}]</span>
+      {site.hours.map((h) => (
+        <span key={h.days} className="flex gap-2 whitespace-nowrap">
+          <span className="text-muted">{h.days}</span>
+          <span className="text-ink">[{h.time}]</span>
+        </span>
+      ))}
     </>
   );
 }
@@ -306,7 +310,7 @@ export default function Header() {
               <SocialLinks />
             </div>
           </div>
-          <p className="flex items-center justify-between gap-4 border-t border-stone px-[18px] py-4 text-base">
+          <p className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-stone px-[18px] py-4 text-base">
             <Hours />
           </p>
           <div className="grid grid-cols-2 border-t border-stone">
