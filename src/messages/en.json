@@ -47,6 +47,7 @@
     "remindersOff": "Off",
     "signOut": "Sign out",
     "booked": "You’re booked! Your appointment {code} is confirmed.",
+    "downloadConsentLink": "Download your signed consent form (PDF).",
     "history": "History",
     "noHistory": "Your past appointments will appear here.",
     "status": {
@@ -71,6 +72,7 @@
       "cancel": "Cancel",
       "addToGoogle": "Add to Google Calendar",
       "downloadIcs": "Download .ics",
+      "downloadConsent": "Consent form (PDF)",
       "contact": "Contact us on WhatsApp",
       "pay": "Complete payment",
       "redirecting": "Opening checkout…",
@@ -237,6 +239,7 @@
       "category": "Category",
       "treatment": "Treatment",
       "options": "Customize",
+      "consent": "Consent",
       "datetime": "Date & time",
       "confirm": "Confirm"
     },
@@ -306,6 +309,32 @@
       "payFull": "Pay in full · {amount} now",
       "payFullHint": "Nothing left to pay after your treatment."
     },
+    "consent": {
+      "progressLabel": "Consent form sections",
+      "stepOf": "Step {current} of {total}",
+      "section": "Section {number}",
+      "goTo": "Section {number}: {title}",
+      "locked": "Section {number}: {title}. Complete the previous sections first.",
+      "prefilled": "Welcome back. We filled this in from your last visit on {date}: check that everything is still correct, then confirm and sign.",
+      "jumpToMissing": "Go to what’s left",
+      "optional": "optional",
+      "yes": "Yes",
+      "no": "No",
+      "back": "Back",
+      "next": "Continue",
+      "finish": "Sign and choose a time",
+      "clear": "Clear signature",
+      "fixErrors": "Please complete the highlighted fields to continue.",
+      "errors": {
+        "required": "This field is required.",
+        "choose": "Please choose an option.",
+        "email": "Please enter a valid email address.",
+        "phone": "Please enter a valid phone number.",
+        "dateOfBirth": "Please enter your date of birth.",
+        "consent": "Please check this box to continue.",
+        "signature": "Please draw your signature."
+      }
+    },
     "summary": {
       "title": "Your booking",
       "empty": "Choose a treatment to see your summary.",
@@ -329,6 +358,7 @@
       "not_held": "This time is no longer reserved. Please pick a time again.",
       "hold_expired": "Your reserved time has expired. Please pick a time again.",
       "intake_required": "Please answer the questions before confirming.",
+      "consent_required": "Please complete and sign the consent form, then choose your time again.",
       "not_cancellable": "This booking can no longer be cancelled.",
       "not_reschedulable": "This booking can no longer be rescheduled.",
       "outside_policy": "It’s too close to your appointment to change it online. Please contact us and we’ll do our best to help.",

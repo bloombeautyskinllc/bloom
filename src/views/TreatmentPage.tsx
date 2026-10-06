@@ -13,6 +13,7 @@ import logoMark from '../assets/images/logo-mark.png';
 import Link from 'next/link';
 import { routes, site } from '../data/site';
 import { treatmentCategories } from '../data/treatments';
+import type { Testimonial } from '../data/testimonials';
 import { findTreatmentPage, type MenuGroup, type MenuItem, type SplitHeading, type TreatmentPage as Page } from '../data/treatmentPages';
 
 type HeadingProps = {
@@ -267,8 +268,8 @@ function Experience({ experience }: { experience: Page['experience'] }) {
   );
 }
 
-/** `menu`: the price menu rows, loaded from the catalog by the server page */
-export default function TreatmentPage({ slug, menu }: { slug: string; menu: MenuGroup[] }) {
+/** `menu` and `testimonials` are loaded by the server page (admin > Catalog and admin > Testimonials) */
+export default function TreatmentPage({ slug, menu, testimonials }: { slug: string; menu: MenuGroup[]; testimonials: Testimonial[] }) {
   const page = findTreatmentPage(slug);
 
   if (!page) {
@@ -282,7 +283,7 @@ export default function TreatmentPage({ slug, menu }: { slug: string; menu: Menu
       <Why why={page.why} />
       <Menu menu={page.menu} groups={menu} benefits={page.benefits} />
       <Experience experience={page.experience} />
-      <Testimonials />
+      <Testimonials testimonials={testimonials} />
     </>
   );
 }

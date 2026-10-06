@@ -7,7 +7,10 @@ import SectionLabel from '@/components/ui/SectionLabel';
 import { routes } from '@/data/site';
 import { requireOnboardedProfile } from '@/lib/auth/session';
 import { getBookingCatalog } from '@/lib/booking/catalog';
+import { formatDateLong } from '@/lib/booking/format';
+import { formatPhone } from '@/lib/format/phone';
 import { getPublicSettings } from '@/lib/settings';
+import { createClient } from '@/lib/supabase/server';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('booking');
@@ -23,8 +26,18 @@ export default async function BookingPage({ searchParams }: { searchParams: Sear
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(raw)) if (typeof value === 'string') params.set(key, value);
   // The guard and the data load run side by side: none of these queries depends on another
-  const [, catalog, settings, t] = await Promise.all([
-    requireOnboardedProfile(params.size ? `${routes.booking}?${params.toString()}` : routes.booking),
+  const [{ profile, previousConsent }, catalog, settings, t] = await Promise.all([
+    requireOnboardedProfile(params.size ? `${routes.booking}?${params.toString()}` : routes.booking).then(async ({ profile }) => {
+      // The latest signed form prefills this booking's form
+      const { data } = await (await createClient())
+        .from('consent_forms')
+        .select('answers, signed_at')
+        .eq('client_id', profile.id)
+        .order('signed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return { profile, previousConsent: data };
+    }),
     getBookingCatalog(),
     getPublicSettings(),
     getTranslations('booking'),
@@ -60,6 +73,11 @@ export default async function BookingPage({ searchParams }: { searchParams: Sear
                 depositPercent: settings.deposit_percent,
               }}
               initial={initial}
+              consent={{
+                previousAnswers: previousConsent?.answers ?? null,
+                previousSignedOn: previousConsent ? formatDateLong(previousConsent.signed_at, settings.timezone) : null,
+                profile: { fullName: profile.full_name, email: profile.email, phone: formatPhone(profile.phone_e164) },
+              }}
             />
           </QueryProvider>
         </div>

@@ -46,6 +46,7 @@ const TOC: { part: string; items: [string, string][] }[] = [
       ['nueva', 'Nueva reserva'],
       ['clientas', 'Clientas'],
       ['catalogo', 'Catálogo'],
+      ['testimonios', 'Testimonios'],
       ['equipo', 'Equipo y horarios'],
       ['settings', 'Configuración'],
       ['actividad', 'Registro de actividad'],
@@ -496,6 +497,25 @@ export default async function GuidePage() {
               Cada categoría tiene su <Ui>Calendar color</Ui> y <Ui>+ Add treatment</Ui>. Los cambios aplican a reservas nuevas; las existentes conservan su precio.
             </p>
             <Shot src={adminCatalog} alt="Catálogo de tratamientos" tall caption="Catálogo." />
+          </Section>
+
+          <Section id="testimonios" title="Testimonios" adminOnly>
+            <p>Las historias de clientas que se ven en la página de inicio y en cada página de tratamiento.</p>
+            <ul>
+              <li>
+                Con <Ui>Edit</Ui> cambias la frase destacada, el texto, la etiqueta del tratamiento, las estrellas y la foto (<Ui>Replace photo</Ui>). La foto se reduce sola antes de
+                subirse.
+              </li>
+              <li>
+                En <Ui>Show on</Ui> eliges en qué páginas aparece: <em>Home</em> y cualquier tratamiento. Una misma historia puede salir en varias páginas.
+              </li>
+              <li>
+                Las flechas cambian el orden; el sitio muestra las historias en ese orden. Los filtros de arriba muestran solo las de una página.
+              </li>
+              <li>
+                Quita <Ui>Visible on the website</Ui> para ocultar una historia sin borrarla. <Ui>+ Add testimonial</Ui> agrega una nueva.
+              </li>
+            </ul>
           </Section>
 
           <Section id="equipo" title="Equipo y horarios" adminOnly>

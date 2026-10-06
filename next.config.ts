@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Lets a verification build (NEXT_DIST_DIR=.next-check) run without touching the running dev server's .next
   distDir: process.env.NEXT_DIST_DIR || '.next',
+  // The consent PDF reads its fonts from disk at runtime
+  outputFileTracingIncludes: {
+    '/api/bookings/\\[id\\]/consent': ['./src/assets/fonts/*.woff'],
+  },
 };
 
 export default withNextIntl(nextConfig);

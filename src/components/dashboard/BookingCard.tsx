@@ -37,6 +37,8 @@ export type DashboardBooking = {
   reschedulesLeft: number;
   refundPercent: number | null;
   googleCalendarUrl: string;
+  /** Signed intake & consent form (downloadable as PDF) */
+  hasConsent: boolean;
 };
 
 const statusTone: Record<DashboardBooking['status'], string> = {
@@ -196,6 +198,11 @@ export default function BookingCard({ booking, timeZone, maxWindowDays, upcoming
           <a href={`/api/bookings/${booking.id}/ics`} className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm text-muted transition hover:bg-sand hover:text-ink">
             <HiOutlineDownload className="h-4 w-4" /> {t('actions.downloadIcs')}
           </a>
+          {booking.hasConsent && (
+            <a href={`/api/bookings/${booking.id}/consent`} className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm text-muted transition hover:bg-sand hover:text-ink">
+              <HiOutlineDownload className="h-4 w-4" /> {t('actions.downloadConsent')}
+            </a>
+          )}
           {booking.canChange && booking.status === 'confirmed' && (
             <p className="w-full text-xs text-muted">{t('reschedulesLeft', { count: booking.reschedulesLeft })}</p>
           )}

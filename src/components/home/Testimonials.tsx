@@ -6,11 +6,12 @@ import Stars from '../ui/Stars';
 import Reveal from '../motion/Reveal';
 import SplitText from '../motion/SplitText';
 import GlowOrb from '../decor/GlowOrb';
-import { testimonials } from '../../data/testimonials';
+import type { Testimonial } from '../../data/testimonials';
 
 const ease = 'ease-[cubic-bezier(0.22,1,0.36,1)]';
 
-export default function Testimonials() {
+/** `testimonials`: the stories for this page, loaded by the server page (admin > Testimonials) */
+export default function Testimonials({ testimonials }: { testimonials: Testimonial[] }) {
   const trackRef = useRef<HTMLUListElement>(null);
 
   const scroll = (dir: 1 | -1) => {
@@ -20,6 +21,8 @@ export default function Testimonials() {
     const step = card ? card.getBoundingClientRect().width + 32 : track.clientWidth * 0.8;
     track.scrollBy({ left: dir * step, behavior: 'smooth' });
   };
+
+  if (testimonials.length === 0) return null;
 
   return (
     <section id="stories" className="relative isolate overflow-hidden bg-gradient-to-b from-sand to-stone py-20 sm:py-[100px]">
@@ -43,20 +46,22 @@ export default function Testimonials() {
         {testimonials.map((t, i) => (
           <Reveal
             as="li"
-            key={t.quote}
+            key={t.id}
             delay={Math.min(i, 3) * 150}
             className="group flex w-[85vw] max-w-[640px] shrink-0 snap-start flex-col gap-6 sm:w-[600px] sm:flex-row sm:items-center sm:gap-7"
           >
             <div className="relative shrink-0 overflow-hidden rounded-[14px]">
               <img
                 src={t.image}
-                alt=""
+                alt={t.imageAlt}
                 loading="lazy"
                 className={`reveal-zoom aspect-[5/7] w-full object-cover sm:h-[350px] sm:w-[250px]`}
               />
-              <span className="absolute left-3 top-3 rounded-lg bg-cream/95 px-3 py-1 font-serif text-lg text-ink shadow-soft">
-                {t.tag}
-              </span>
+              {t.tag && (
+                <span className="absolute left-3 top-3 rounded-lg bg-cream/95 px-3 py-1 font-serif text-lg text-ink shadow-soft">
+                  {t.tag}
+                </span>
+              )}
             </div>
             <figure className="flex flex-col gap-3.5">
               <Stars rating={t.rating} className="text-xs text-accent" />
@@ -68,10 +73,12 @@ export default function Testimonials() {
                 “{t.quote}”
               </blockquote>
               <p className="text-sm leading-relaxed text-muted">{t.body}</p>
-              <figcaption className="flex items-center gap-3 text-[13px] font-bold text-ink">
-                <span aria-hidden className={`h-px w-6 bg-accent/60 transition-[width] duration-700 ${ease} group-hover:w-12`} />
-                {t.treatment}
-              </figcaption>
+              {t.treatment && (
+                <figcaption className="flex items-center gap-3 text-[13px] font-bold text-ink">
+                  <span aria-hidden className={`h-px w-6 bg-accent/60 transition-[width] duration-700 ${ease} group-hover:w-12`} />
+                  {t.treatment}
+                </figcaption>
+              )}
             </figure>
           </Reveal>
         ))}

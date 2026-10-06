@@ -1,7 +1,7 @@
-import ComingSoon from '@/views/ComingSoon';
+import { redirect } from 'next/navigation';
+import { routes } from '@/data/site';
 
-export const metadata = { title: 'Client intake form | BLOOM Beauty Skin' };
-
+// The intake & consent form is signed online as a step of every booking
 export default function Page() {
-  return <ComingSoon title="Client intake form" />;
+  redirect(routes.booking);
 }

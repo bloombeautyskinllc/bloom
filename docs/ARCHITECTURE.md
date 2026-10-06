@@ -556,3 +556,41 @@ open until paid or until the booking is cancelled; pg_cron polls them only for t
 that the webhook and the return page record the payment.
 The catalog edits the deposit as a percentage per treatment (`treatments.deposit_percent`, prefilled
 with the business default; saving the default stores null so the treatment keeps following Settings).
+
+---
+
+## 9. Intake and consent form (2026-10-06)
+
+Every online booking includes the studio's intake & consent form (the paper form "Group 15"), signed in the
+booking flow after the treatment is chosen and before picking a time, so the 10-minute hold never runs while
+the client is filling it in. Flow: category → treatment → (customize) → **consent** → date & time → confirm.
+
+**Client part (sections 01–06).** A six-section wizard (`src/components/booking/ConsentStep.tsx`) with a
+"Step 01 of 06" progress bar: sections already reached can be revisited, later ones stay locked until the
+required fields of every earlier section are valid. The signature is drawn with a finger, stylus or mouse
+(`src/components/consent/DrawingPad.tsx`, PNG data URL). The next booking prefills sections 01–04 from the
+client's latest form (first visit: name, email and phone from the profile); "What are you interested in today?"
+always follows the booked treatment, and the consent statements and the signature are always asked again.
+
+**Storage.** `public.consent_forms` (one row per booking): `answers` (sections 01–05), `signed_name`,
+`client_signature`, `signed_at`, and the esthetician part (`esthetician` jsonb with the skin analysis, the
+face-map drawings and the treatment record; `esthetician_signature`, `esthetician_signed_at`). Clients read
+their own rows, staff read all; writes only through `save_booking_consent` (the client, for a held booking,
+called right before `submit_booking`) and `staff_save_consent_record`. `submit_booking` raises
+`consent_required` when the booking has no form. Answers, signatures and drawings are redacted in the audit log.
+
+**Wording.** Labels, choices and the consent text live in `src/lib/consent/form.ts`, keyed by
+`CONSENT_FORM_VERSION`; each row stores the version it was signed with. Changing the consent text means a new
+version, keeping the old one so signed forms still render as signed. Version 1 covers every treatment
+category (accuracy, risks, changes in health, results and aftercare, voluntary consent and minors, privacy);
+it has not been reviewed by a lawyer. `/intake-form` redirects to `/booking`.
+
+**PDF.** `GET /api/bookings/[id]/consent` renders the form on demand with `@react-pdf/renderer`
+(`src/lib/consent/pdf.tsx`, brand fonts in `src/assets/fonts`, traced by `next.config.ts`), so it always
+includes the latest esthetician part. Clients download it from the dashboard; staff from the booking page and
+the client page. Staff downloads are logged (`consent.downloaded`).
+
+**Back office.** The booking page shows whether the form was signed, health flags (conditions, medication,
+allergies, areas to avoid, photo consent), the PDF, and the esthetician record: face maps (front and profile
+outlines to draw on), skin analysis, treatment record and the esthetician signature. Bookings created by staff
+have no online form; staff can upload a signed paper form to the client's documents.

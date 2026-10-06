@@ -7,6 +7,7 @@ import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js/
 import { z } from 'zod';
 import { routes } from '@/data/site';
 import { logAppEvent } from '@/lib/audit/log';
+import { CONSENT_FORM_VERSION, parseSubmission } from '@/lib/consent/form';
 import { processJobs } from '@/lib/jobs/runner';
 import { paymentUrlFor } from '@/lib/payments/links';
 import { getRequestContext } from '@/lib/request-context';
@@ -27,6 +28,7 @@ const KNOWN_ERRORS = [
   'not_held',
   'hold_expired',
   'intake_required',
+  'consent_required',
   'not_cancellable',
   'not_reschedulable',
   'outside_policy',
@@ -97,13 +99,33 @@ const submitSchema = z.object({
   intake: z.record(z.string(), z.union([z.string().max(2000), z.boolean()])).optional(),
   // Pay the full price online instead of the deposit
   payFull: z.boolean().optional(),
+  // Intake and consent form signed in the booking flow (answers checked by parseSubmission)
+  consent: z.object({
+    version: z.literal(CONSENT_FORM_VERSION),
+    answers: z.unknown(),
+    signedName: z.string().trim().min(2).max(120),
+    signature: z.string().regex(/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/).max(300_000),
+  }),
 });
 
 export async function submitBooking(input: z.input<typeof submitSchema>): Promise<ActionResult<{ status: string }>> {
   const parsed = submitSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: 'invalid_request' };
 
+  // Dates of birth are checked against tomorrow (UTC) so a client ahead of UTC is never rejected
+  const answers = parseSubmission(parsed.data.consent, new Date(Date.now() + 86_400_000).toISOString().slice(0, 10));
+  if (!answers) return { ok: false, error: 'consent_required' };
+
   const supabase = await createClient();
+  const { error: consentError } = await supabase.rpc('save_booking_consent', {
+    p_booking_id: parsed.data.bookingId,
+    p_version: parsed.data.consent.version,
+    p_answers: answers,
+    p_signed_name: parsed.data.consent.signedName,
+    p_signature: parsed.data.consent.signature,
+  });
+  if (consentError) return { ok: false, error: toError(consentError.message) };
+
   const { data, error } = await supabase.rpc('submit_booking', {
     p_booking_id: parsed.data.bookingId,
     p_notes: parsed.data.notes,

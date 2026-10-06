@@ -4,11 +4,13 @@ import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import AuditTimeline from '@/components/admin/AuditTimeline';
 import BookingActions from '@/components/admin/BookingActions';
+import ConsentPanel from '@/components/admin/ConsentPanel';
 import NoteForm from '@/components/admin/NoteForm';
 import PaymentsPanel from '@/components/admin/PaymentsPanel';
 import { PageHeader, Panel, StatusBadge, buttonClass } from '@/components/admin/ui';
 import { requireStaff } from '@/lib/auth/session';
 import { formatDateLong, formatDuration, formatMoney, formatTime } from '@/lib/booking/format';
+import { answersSchema, conditionChoices, emptyEstheticianRecord, estheticianSchema, labelOf, pressureChoices } from '@/lib/consent/form';
 import { formatPhone } from '@/lib/format/phone';
 import { getPublicSettings } from '@/lib/settings';
 import { payableNow, refreshPendingRefunds } from '@/lib/payments/links';
@@ -40,7 +42,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
   const { data: b } = await supabase.from('booking_search').select('*').eq('id', id).maybeSingle();
   if (!b) notFound();
 
-  const [{ data: notes }, { data: events }, { data: emails }, { data: money }, { data: payments }, { data: refunds }, { data: openLink }, square] = await Promise.all([
+  const [{ data: notes }, { data: events }, { data: emails }, { data: money }, { data: payments }, { data: refunds }, { data: openLink }, square, { data: consent }] = await Promise.all([
     supabase.from('booking_notes').select('id, body, created_at, author:profiles!author_id(full_name)').eq('booking_id', id).is('deleted_at', null).order('created_at'),
     supabase.from('calendar_events').select('kind, sync_status, last_error, last_synced_at').eq('booking_id', id),
     supabase.from('notifications').select('template, recipient, status, created_at').eq('booking_id', id).order('created_at'),
@@ -49,7 +51,17 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
     supabase.from('refunds').select('id, amount_cents, status, reason, created_at').eq('booking_id', id).order('created_at'),
     supabase.from('payment_links').select('url, amount_cents, kind').eq('booking_id', id).eq('status', 'open').maybeSingle(),
     activeSquare(),
+    supabase.from('consent_forms').select('answers, signed_name, signed_at, esthetician, esthetician_signature, esthetician_signed_at').eq('booking_id', id).maybeSingle(),
   ]);
+  const answers = consent ? answersSchema.parse(consent.answers) : null;
+  const when = (iso: string) => `${formatDateLong(iso, tz)} · ${formatTime(iso, tz)}`;
+  // First visit to the esthetician part: the appointment and the signed-in staff member
+  const newRecord = () => {
+    const empty = emptyEstheticianRecord();
+    const date = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(b.start_at!));
+    const name = profile.full_name ?? '';
+    return { ...empty, estheticianName: name, record: { ...empty.record, date, treatment: [b.service, b.options].filter(Boolean).join(' · '), esthetician: name } };
+  };
   const paidCents = money?.amount_paid_cents ?? 0;
   const refundedCents = money?.amount_refunded_cents ?? 0;
 
@@ -118,6 +130,28 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
               {b.client_notes && <Row label={t('booking.clientNotes')}>{b.client_notes}</Row>}
               {b.cancellation_reason && <Row label={t('booking.cancelReason')}>{b.cancellation_reason}</Row>}
             </dl>
+          </Panel>
+
+          <Panel title={t('consent.title')}>
+            <ConsentPanel
+              bookingId={b.id!}
+              signed={consent ? { signedName: consent.signed_name, signedAtLabel: when(consent.signed_at) } : null}
+              highlights={
+                answers && {
+                  conditions: answers.health.conditions
+                    .filter((c) => c !== 'none')
+                    .map((c) => (c === 'other' && answers.health.conditionsOther ? answers.health.conditionsOther : labelOf(conditionChoices, c))),
+                  medication: answers.health.medication === 'yes' ? answers.health.medicationDetails || t('common.yes') : null,
+                  allergies: answers.health.allergies || null,
+                  avoid: answers.preferences.avoid || null,
+                  pressure: answers.preferences.pressure ? labelOf(pressureChoices, answers.preferences.pressure) : null,
+                  photos: answers.consent.photos,
+                }
+              }
+              record={consent?.esthetician ? estheticianSchema.parse(consent.esthetician) : newRecord()}
+              estheticianSignature={consent?.esthetician_signature ?? null}
+              estheticianSignedLabel={consent?.esthetician_signed_at ? when(consent.esthetician_signed_at) : null}
+            />
           </Panel>
 
           <Panel title={t('booking.internalNotes')}>

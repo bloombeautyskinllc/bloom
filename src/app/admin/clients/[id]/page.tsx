@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { HiOutlineDownload } from 'react-icons/hi';
 import AuditTimeline from '@/components/admin/AuditTimeline';
 import { ClientEditor, Documents, PinButton, TagEditor } from '@/components/admin/ClientPanels';
 import NoteForm from '@/components/admin/NoteForm';
@@ -23,11 +24,16 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
   const { data: c } = await supabase.from('client_overview').select('*').eq('id', id).maybeSingle();
   if (!c) notFound();
 
-  const [{ data: bookings }, { data: notes }, { data: docs }, { data: allTags }] = await Promise.all([
+  const [{ data: bookings }, { data: notes }, { data: docs }, { data: allTags }, { data: consents }] = await Promise.all([
     supabase.from('booking_search').select('id, code, status, start_at, service, options, total_cents').eq('client_id', id).order('start_at', { ascending: false }).limit(100),
     supabase.from('client_notes').select('id, body, pinned, created_at, author:profiles!author_id(full_name)').eq('client_id', id).is('deleted_at', null).order('pinned', { ascending: false }).order('created_at', { ascending: false }),
     supabase.from('client_documents').select('id, title, kind, created_at').eq('client_id', id).is('deleted_at', null).order('created_at', { ascending: false }),
     supabase.from('client_tags').select('name').order('name'),
+    supabase
+      .from('consent_forms')
+      .select('booking_id, signed_at, esthetician_signed_at, booking:bookings!booking_id(code, start_at)')
+      .eq('client_id', id)
+      .order('signed_at', { ascending: false }),
   ]);
 
   const date = (iso: string) => formatDateShort(iso, tz);
@@ -108,6 +114,31 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
               </ul>
             )}
             <NoteForm kind="client" targetId={c.id!} placeholder={t('client.notePlaceholder')} label={t('booking.addNote')} />
+          </Panel>
+
+          <Panel title={t('consent.forms')}>
+            {!consents?.length ? (
+              <p className="text-sm text-muted">{t('consent.noForms')}</p>
+            ) : (
+              <ul className="divide-y divide-stone">
+                {consents.map((f) => (
+                  <li key={f.booking_id} className="flex items-center gap-3 py-2.5 text-sm">
+                    <Link href={`/admin/bookings/${f.booking_id}`} className="min-w-0 flex-1 transition hover:text-bronze">
+                      <span className="block text-ink">
+                        {f.booking?.code} · {f.booking ? date(f.booking.start_at) : ''}
+                      </span>
+                      <span className="block text-xs text-muted">
+                        {t('consent.signed')} {date(f.signed_at)}
+                        {f.esthetician_signed_at ? '' : ` · ${t('consent.estheticianPending')}`}
+                      </span>
+                    </Link>
+                    <a href={`/api/bookings/${f.booking_id}/consent`} className={buttonClass.ghost} aria-label={t('consent.download')}>
+                      <HiOutlineDownload className="h-4 w-4" /> PDF
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Panel>
 
           <Panel title={t('client.documents')}>

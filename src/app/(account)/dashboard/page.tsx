@@ -29,7 +29,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const supabase = await createClient();
   const { data: rows, error } = await supabase
     .from('bookings')
-    .select('id, code, status, payment_status, start_at, end_at, total_cents, amount_due_cents, amount_paid_cents, amount_refunded_cents, hold_expires_at, reschedule_count, policy, items:booking_items(kind, name, price_type, duration_minutes, sort_order)')
+    .select('id, code, status, payment_status, start_at, end_at, total_cents, amount_due_cents, amount_paid_cents, amount_refunded_cents, hold_expires_at, reschedule_count, policy, items:booking_items(kind, name, price_type, duration_minutes, sort_order), consent:consent_forms(booking_id)')
     .eq('client_id', profile.id)
     .not('status', 'in', '("held","expired")')
     .order('start_at', { ascending: true });
@@ -65,6 +65,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       reschedulesLeft: hoursLeft >= (policy.reschedule_cutoff_hours ?? 0) ? Math.max((policy.max_reschedules ?? 0) - b.reschedule_count, 0) : 0,
       refundPercent: policy.cancellation_refund_percent ?? null,
       googleCalendarUrl: googleCalendarUrl(bookingCalendarEvent(b, env.NEXT_PUBLIC_SITE_URL)),
+      hasConsent: Boolean(b.consent),
     };
     return booking;
   });
@@ -85,6 +86,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       {justBooked && (
         <p role="status" className="mb-6 rounded-2xl border border-cocoa/20 bg-cream px-5 py-4 text-[15px] text-ink shadow-soft">
           {justBooked.status === 'pending_payment' ? t('bookedPendingPayment', { code: justBooked.code }) : t('booked', { code: justBooked.code })}
+          {justBooked.hasConsent && (
+            <>
+              {' '}
+              <a href={`/api/bookings/${justBooked.id}/consent`} className="font-medium underline decoration-taupe underline-offset-4">
+                {t('downloadConsentLink')}
+              </a>
+            </>
+          )}
         </p>
       )}
 

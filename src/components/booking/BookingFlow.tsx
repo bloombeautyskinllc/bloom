@@ -9,14 +9,16 @@ import { routes } from '@/data/site';
 import { holdSlot, startPayment, submitBooking, type Hold } from '@/lib/booking/actions';
 import { quote as computeQuote } from '@/lib/booking/pricing';
 import type { BookingCatalog } from '@/lib/booking/types';
+import { CONSENT_FORM_VERSION, interestFor, prefillAnswers } from '@/lib/consent/form';
 import { scrollToTarget } from '@/lib/smoothScroll';
 import { cn } from '@/lib/utils';
 import BookingSummary from './BookingSummary';
 import ConfirmStep, { type PolicySummary } from './ConfirmStep';
+import ConsentStep, { type ConsentDraft } from './ConsentStep';
 import DateTimePicker from './DateTimePicker';
 import { CategoryStep, OptionsStep, StepHeading, TreatmentStep } from './steps';
 
-type Step = 'category' | 'treatment' | 'options' | 'datetime' | 'confirm';
+type Step = 'category' | 'treatment' | 'options' | 'consent' | 'datetime' | 'confirm';
 
 type Props = {
   catalog: BookingCatalog;
@@ -24,9 +26,11 @@ type Props = {
   maxWindowDays: number;
   policy: PolicySummary;
   initial: { categorySlug: string | null; treatmentId: string | null; optionIds: string[] };
+  /** The client's latest consent form (prefills the new one) and their profile basics */
+  consent: { previousAnswers: unknown; previousSignedOn: string | null; profile: { fullName: string | null; email: string | null; phone: string | null } };
 };
 
-export default function BookingFlow({ catalog, timeZone, maxWindowDays, policy, initial }: Props) {
+export default function BookingFlow({ catalog, timeZone, maxWindowDays, policy, initial, consent: consentSource }: Props) {
   const t = useTranslations('booking');
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -45,11 +49,18 @@ export default function BookingFlow({ catalog, timeZone, maxWindowDays, policy, 
   const hasOptions = (treatment?.options.length ?? 0) > 0;
   const quote = useMemo(() => (treatment ? computeQuote(treatment, optionIds) : null), [treatment, optionIds]);
 
+  // Signed for every booking; answers carry over from the last form, the signature never does
+  const [consent, setConsent] = useState<ConsentDraft>(() => ({
+    answers: prefillAnswers(consentSource.previousAnswers, consentSource.profile, treatment?.name ?? null),
+    signedName: '',
+    signature: null,
+  }));
+
   // A preselected laser area still lands on "Customize": clients usually add more areas
-  const initialStep: Step = treatment ? (hasOptions ? 'options' : 'datetime') : category ? 'treatment' : 'category';
+  const initialStep: Step = treatment ? (hasOptions ? 'options' : 'consent') : category ? 'treatment' : 'category';
   const [step, setStep] = useState<Step>(initialStep);
 
-  const steps: Step[] = ['category', 'treatment', ...(hasOptions ? (['options'] as const) : []), 'datetime', 'confirm'];
+  const steps: Step[] = ['category', 'treatment', ...(hasOptions ? (['options'] as const) : []), 'consent', 'datetime', 'confirm'];
   const index = steps.indexOf(step);
 
   // Keep the selection in the URL so a refresh (or the sign-in round trip) resumes it
@@ -94,7 +105,13 @@ export default function BookingFlow({ catalog, timeZone, maxWindowDays, policy, 
   const confirm = (values: { notes: string; intake?: Record<string, string | boolean>; payFull: boolean }) => {
     if (!hold) return;
     startTransition(async () => {
-      const result = await submitBooking({ bookingId: hold.bookingId, notes: values.notes || undefined, intake: values.intake, payFull: values.payFull });
+      const result = await submitBooking({
+        bookingId: hold.bookingId,
+        notes: values.notes || undefined,
+        intake: values.intake,
+        payFull: values.payFull,
+        consent: { version: CONSENT_FORM_VERSION, answers: consent.answers, signedName: consent.signedName, signature: consent.signature ?? '' },
+      });
       if (result.ok) {
         if (result.data.status === 'pending_payment') {
           const payment = await startPayment({ bookingId: hold.bookingId });
@@ -108,6 +125,11 @@ export default function BookingFlow({ catalog, timeZone, maxWindowDays, policy, 
           setHold(null);
           setSlot(null);
           go('datetime');
+        } else if (result.error === 'consent_required') {
+          // The hold stays; the client fixes the form and picks the time again
+          setHold(null);
+          setSlot(null);
+          setStep('consent');
         }
       }
     });
@@ -133,7 +155,8 @@ export default function BookingFlow({ catalog, timeZone, maxWindowDays, policy, 
           </p>
         </nav>
 
-        {index > 0 && (
+        {/* The consent form has its own Back button per section */}
+        {index > 0 && step !== 'consent' && (
           <button type="button" onClick={back} className="mt-6 inline-flex items-center gap-2 text-sm text-muted transition hover:text-ink">
             <HiArrowLeft className="h-4 w-4" /> {t('back')}
           </button>
@@ -166,7 +189,9 @@ export default function BookingFlow({ catalog, timeZone, maxWindowDays, policy, 
                 }
                 setTreatmentId(id);
                 const next = category.treatments.find((x) => x.id === id);
-                go(next && next.options.length > 0 ? 'options' : 'datetime');
+                // "What are you interested in today?" follows the booked treatment
+                if (next) setConsent((c) => ({ ...c, answers: { ...c.answers, preferences: { ...c.answers.preferences, ...interestFor(next.name) } } }));
+                go(next && next.options.length > 0 ? 'options' : 'consent');
               }}
             />
           )}
@@ -182,10 +207,19 @@ export default function BookingFlow({ catalog, timeZone, maxWindowDays, policy, 
                   setOptionIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
                 }}
               />
-              <button type="button" onClick={() => go('datetime')} disabled={!quote?.optionsValid} className="btn-dark mt-8 w-full justify-center disabled:opacity-50 sm:w-auto">
+              <button type="button" onClick={() => go('consent')} disabled={!quote?.optionsValid} className="btn-dark mt-8 w-full justify-center disabled:opacity-50 sm:w-auto">
                 {t('continue')}
               </button>
             </>
+          )}
+
+          {step === 'consent' && error && (
+            <p role="alert" className="mb-6 rounded-xl border border-accent/30 bg-sand px-4 py-3 text-sm text-ink">
+              {error}
+            </p>
+          )}
+          {step === 'consent' && treatment && (
+            <ConsentStep value={consent} onChange={setConsent} prefilledOn={consentSource.previousSignedOn} onExit={back} onDone={() => go('datetime')} />
           )}
 
           {step === 'datetime' && treatment && (

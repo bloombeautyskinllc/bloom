@@ -364,6 +364,55 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"consent_forms": {
+                  Row: {
+                    "answers": NonNullable<Json>,"booking_id": string,"client_id": string,"client_signature": string,"created_at": string,"esthetician": Json | null,"esthetician_profile_id": string | null,"esthetician_signature": string | null,"esthetician_signed_at": string | null,"form_version": number,"id": string,"signed_at": string,"signed_name": string,"updated_at": string
+                  }
+                  Insert: {
+                    "answers": NonNullable<Json>,"booking_id": string,"client_id": string,"client_signature": string,"created_at"?: string,"esthetician"?: Json | null,"esthetician_profile_id"?: string | null,"esthetician_signature"?: string | null,"esthetician_signed_at"?: string | null,"form_version": number,"id"?: string,"signed_at"?: string,"signed_name": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "answers"?: NonNullable<Json>,"booking_id"?: string,"client_id"?: string,"client_signature"?: string,"created_at"?: string,"esthetician"?: Json | null,"esthetician_profile_id"?: string | null,"esthetician_signature"?: string | null,"esthetician_signed_at"?: string | null,"form_version"?: number,"id"?: string,"signed_at"?: string,"signed_name"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "consent_forms_booking_id_fkey"
+      columns: ["booking_id"]
+isOneToOne: true
+      referencedRelation: "booking_search"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "consent_forms_booking_id_fkey"
+      columns: ["booking_id"]
+isOneToOne: true
+      referencedRelation: "bookings"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "consent_forms_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "client_overview"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "consent_forms_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "consent_forms_esthetician_profile_id_fkey"
+      columns: ["esthetician_profile_id"]
+isOneToOne: false
+      referencedRelation: "client_overview"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "consent_forms_esthetician_profile_id_fkey"
+      columns: ["esthetician_profile_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"google_sync_state": {
                   Row: {
                     "credential_id": string,"last_pull_at": string | null,"sync_token": string | null,"updated_at": string
@@ -635,6 +684,19 @@ isOneToOne: true
       referencedColumns: ["id"]
     }
                   ]
+                },"testimonials": {
+                  Row: {
+                    "body": string,"created_at": string,"id": string,"image_alt": string | null,"image_url": string,"is_active": boolean,"placements": string[],"quote": string,"rating": number,"sort_order": number,"storage_path": string | null,"tag": string | null,"treatment": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "body": string,"created_at"?: string,"id"?: string,"image_alt"?: string | null,"image_url": string,"is_active"?: boolean,"placements"?: string[],"quote": string,"rating"?: number,"sort_order"?: number,"storage_path"?: string | null,"tag"?: string | null,"treatment"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "body"?: string,"created_at"?: string,"id"?: string,"image_alt"?: string | null,"image_url"?: string,"is_active"?: boolean,"placements"?: string[],"quote"?: string,"rating"?: number,"sort_order"?: number,"storage_path"?: string | null,"tag"?: string | null,"treatment"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"treatment_options": {
                   Row: {
                     "created_at": string,"deleted_at": string | null,"description": string | null,"extra_duration_minutes": number | null,"group_label": string | null,"id": string,"is_active": boolean,"name": string,"needs_review": boolean,"price_cents": number,"price_type": Database["public"]['Enums']["price_type"],"slug": string,"sort_order": number,"treatment_id": string,"updated_at": string
@@ -867,6 +929,12 @@ isOneToOne: false
                            },
 "staff_cancel_booking":
 { Args: { "p_booking_id": string,"p_notify"?: boolean,"p_reason"?: string,"p_refund"?: string }; Returns: number
+                           },
+"save_booking_consent":
+{ Args: { "p_answers": Json,"p_booking_id": string,"p_signature": string,"p_signed_name": string,"p_version": number }; Returns: string
+                           },
+"staff_save_consent_record":
+{ Args: { "p_booking_id": string,"p_record": Json,"p_signature"?: string }; Returns: undefined
                            },
 "staff_request_refund":
 { Args: { "p_amount_cents": number,"p_booking_id": string,"p_reason"?: string }; Returns: undefined
