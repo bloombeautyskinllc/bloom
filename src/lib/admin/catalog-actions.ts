@@ -35,10 +35,13 @@ const treatmentSchema = z.object({
   bufferBeforeMin: z.number().int().min(0).max(240),
   bufferAfterMin: z.number().int().min(0).max(240),
   depositPercent: z.number().int().min(0).max(100).nullable(),
+  // 0 = choosing an option is optional; null max = no limit
+  minOptions: z.number().int().min(0).max(50),
+  maxOptions: z.number().int().min(1).max(50).nullable(),
   isBestSeller: z.boolean(),
   isActive: z.boolean(),
   needsReview: z.boolean(),
-});
+}).refine((v) => v.maxOptions === null || v.maxOptions >= v.minOptions);
 
 export async function saveTreatment(input: z.input<typeof treatmentSchema>): Promise<CatalogResult> {
   if (!(await requireAdminSession())) return { ok: false, error: 'forbidden' };
@@ -58,6 +61,8 @@ export async function saveTreatment(input: z.input<typeof treatmentSchema>): Pro
     buffer_before_min: v.bufferBeforeMin,
     buffer_after_min: v.bufferAfterMin,
     deposit_percent: v.depositPercent,
+    min_options: v.minOptions,
+    max_options: v.maxOptions,
     is_best_seller: v.isBestSeller,
     is_active: v.isActive,
     needs_review: v.needsReview,
@@ -108,8 +113,49 @@ export async function saveOption(input: z.input<typeof optionSchema>): Promise<C
     needs_review: v.needsReview,
   };
   const supabase = await createClient();
-  const { error } = v.id ? await supabase.from('treatment_options').update(row).eq('id', v.id) : await supabase.from('treatment_options').insert(row);
+  let error;
+  if (v.id) ({ error } = await supabase.from('treatment_options').update(row).eq('id', v.id));
+  else {
+    // New options go to the end of the list
+    const { data: last } = await supabase
+      .from('treatment_options')
+      .select('sort_order')
+      .eq('treatment_id', v.treatmentId)
+      .order('sort_order', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    ({ error } = await supabase.from('treatment_options').insert({ ...row, sort_order: (last?.sort_order ?? 0) + 10 }));
+  }
   if (error) return { ok: false, error: error.code === '23505' ? 'duplicate' : 'generic' };
+  await clampMinOptions(supabase, v.treatmentId);
+  refreshCatalog();
+  return { ok: true };
+}
+
+// A treatment can't require more options than it offers (hiding or deleting the last area would make it unbookable)
+async function clampMinOptions(supabase: Awaited<ReturnType<typeof createClient>>, treatmentId: string) {
+  const [{ data: treatment }, { count }] = await Promise.all([
+    supabase.from('treatments').select('min_options').eq('id', treatmentId).single(),
+    supabase.from('treatment_options').select('id', { count: 'exact', head: true }).eq('treatment_id', treatmentId).eq('is_active', true).is('deleted_at', null),
+  ]);
+  if (treatment && count !== null && treatment.min_options > count) {
+    await supabase.from('treatments').update({ min_options: count }).eq('id', treatmentId);
+  }
+}
+
+// Soft delete: past bookings keep pointing at the option. The slug is freed so a new option can reuse it.
+export async function deleteOption(id: string): Promise<CatalogResult> {
+  if (!(await requireAdminSession())) return { ok: false, error: 'forbidden' };
+  if (!z.uuid().safeParse(id).success) return { ok: false, error: 'invalid' };
+  const supabase = await createClient();
+  const { data: option } = await supabase.from('treatment_options').select('slug, treatment_id').eq('id', id).is('deleted_at', null).maybeSingle();
+  if (!option) return { ok: false, error: 'invalid' };
+  const { error } = await supabase
+    .from('treatment_options')
+    .update({ deleted_at: new Date().toISOString(), is_active: false, slug: `${option.slug.slice(0, 60).replace(/-+$/, '')}-deleted-${id.slice(0, 8)}` })
+    .eq('id', id);
+  if (error) return { ok: false, error: 'generic' };
+  await clampMinOptions(supabase, option.treatment_id);
   refreshCatalog();
   return { ok: true };
 }

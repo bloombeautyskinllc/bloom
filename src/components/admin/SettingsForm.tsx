@@ -40,7 +40,7 @@ export default function SettingsForm({ initial, squareReady }: { initial: Values
           if (r.ok) {
             setMessage({ tone: 'success', text: t('common.saved') });
             router.refresh();
-          } else setMessage({ tone: 'error', text: r.error === 'invalid' ? `${t('common.error')} (${r.field})` : r.error === 'forbidden' ? t('common.forbidden') : r.error === 'payments_not_configured' ? t('settings.paymentsNotConfigured') : t('common.error') });
+          } else setMessage({ tone: 'error', text: r.error === 'invalid' ? (r.field === 'phone' || r.field === 'whatsapp' ? t('settings.invalidPhone') : `${t('common.error')} (${r.field})`) : r.error === 'forbidden' ? t('common.forbidden') : r.error === 'payments_not_configured' ? t('settings.paymentsNotConfigured') : t('common.error') });
         });
       }}
     >

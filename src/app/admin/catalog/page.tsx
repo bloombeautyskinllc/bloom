@@ -39,6 +39,8 @@ export default async function CatalogPage() {
         bufferBeforeMin: x.buffer_before_min,
         bufferAfterMin: x.buffer_after_min,
         depositPercent: x.deposit_percent,
+        minOptions: x.min_options,
+        maxOptions: x.max_options,
         isBestSeller: x.is_best_seller,
         isActive: x.is_active,
         needsReview: x.needs_review,

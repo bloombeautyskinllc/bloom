@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { parsePhoneNumberFromString } from 'libphonenumber-js/min';
 import { z } from 'zod';
 import { getSession } from '@/lib/auth/session';
 import { SQUARE_ENVIRONMENTS, squareCredentials } from '@/lib/payments/square';
@@ -8,7 +9,19 @@ import { createClient } from '@/lib/supabase/server';
 
 export type SettingsResult = { ok: true } | { ok: false; error: 'forbidden' | 'invalid' | 'generic' | 'payments_not_configured'; field?: string };
 
-const e164 = z.string().regex(/^\+[1-9]\d{6,14}$/);
+// Any common format ("(347) 483-3337", "+1 347 483 3337"); US when there is no country code. Saved as E.164.
+const phoneNumber = z
+  .string()
+  .trim()
+  .transform((v, ctx) => {
+    if (!v) return '';
+    const parsed = parsePhoneNumberFromString(v, 'US');
+    if (!parsed?.isValid()) {
+      ctx.addIssue({ code: 'custom', message: 'invalid phone number' });
+      return z.NEVER;
+    }
+    return parsed.number;
+  });
 const emails = z
   .string()
   .transform((v) => v.split(',').map((x) => x.trim().toLowerCase()).filter(Boolean))
@@ -19,8 +32,8 @@ const settingsSchema = z.object({
   legalName: z.string().trim().min(2).max(120),
   addressLine1: z.string().trim().max(160),
   addressLine2: z.string().trim().max(160),
-  phone: e164.or(z.literal('')),
-  whatsapp: e164.or(z.literal('')),
+  phone: phoneNumber,
+  whatsapp: phoneNumber,
   publicEmail: z.email().or(z.literal('')),
   privacyEmail: z.email(),
   slotIntervalMin: z.coerce.number().int().min(5).max(120),

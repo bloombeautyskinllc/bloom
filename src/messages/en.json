@@ -257,6 +257,8 @@
       "title": "Customize your session",
       "hintMin": "Choose at least {min, plural, one {# option} other {# options}}.",
       "hintRange": "Choose between {min} and {max}.",
+      "hintOptional": "Optional: add any you'd like, or continue without them.",
+      "hintUpTo": "Optional: choose up to {max}.",
       "selected": "{count, plural, =0 {Nothing selected} one {# selected} other {# selected}}",
       "addMinutes": "+{minutes} min"
     },

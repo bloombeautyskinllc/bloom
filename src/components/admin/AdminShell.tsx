@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import type { IconType } from 'react-icons';
 import {
+  HiOutlineBookOpen,
   HiOutlineCalendar,
   HiOutlineClipboardList,
   HiOutlineCog,
@@ -35,6 +36,7 @@ const ITEMS: Item[] = [
   { href: '/admin/team', key: 'team', icon: HiOutlineUserGroup, adminOnly: true },
   { href: '/admin/settings', key: 'settings', icon: HiOutlineCog, adminOnly: true },
   { href: '/admin/activity', key: 'activity', icon: HiOutlineFingerPrint, adminOnly: true },
+  { href: '/admin/guide', key: 'guide', icon: HiOutlineBookOpen },
 ];
 
 // Longest matching prefix wins, so /admin/bookings/new highlights "New booking", not "Bookings"

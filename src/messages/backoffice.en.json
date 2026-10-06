@@ -10,6 +10,7 @@
     "team": "Team & hours",
     "settings": "Settings",
     "activity": "Activity log",
+    "guide": "Guide",
     "viewSite": "View website",
     "signOut": "Sign out",
     "menu": "Menu",
@@ -337,7 +338,17 @@
     "depositOfOptions": "{percent}% of the selected options, charged at booking",
     "depositNone": "Nothing is charged at booking: the full price is paid after the treatment",
     "depositInvalid": "Enter a percentage from 0 to 100",
-    "depositShort": "deposit {amount}"
+    "depositShort": "deposit {amount}",
+    "minOptions": "Options required (min)",
+    "minOptionsHint": "0 = optional: the client can book the session without choosing any option",
+    "maxOptions": "Options allowed (max)",
+    "maxOptionsHint": "Leave empty for no limit",
+    "optionsRangeInvalid": "The maximum can't be lower than the minimum",
+    "optionsFreeWarning": "Options are optional and the base price is $0: a session with no option would be free",
+    "noOptions": "No options yet. Clients book this treatment as is.",
+    "optionVisible": "Visible",
+    "deleteOptionConfirm": "Delete “{name}”? It disappears from the site and the booking form. Past bookings keep it.",
+    "duplicate": "That URL name is already in use. Try a different name."
   },
   "team": {
     "title": "Team & hours",
@@ -421,6 +432,7 @@
     "integrations": "Integrations",
     "termsNote": "These values are published in the Terms of service automatically.",
     "paymentsNotConfigured": "The selected Square mode has no credentials on this server. Add SQUARE_SANDBOX_* (test) or SQUARE_PRODUCTION_* (live) in Vercel and redeploy.",
+    "invalidPhone": "Check the phone or WhatsApp number. Include the area code, e.g. (347) 483-3337 or +1 347 483 3337.",
     "depositPercent": "Deposit at booking (%)",
     "depositNote": "Charged online to reserve when a treatment has no fixed deposit in the catalog. 100 = full price. The client pays the rest after the treatment."
   },

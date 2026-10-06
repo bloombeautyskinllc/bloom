@@ -19,7 +19,7 @@ export async function getTreatmentMenu(categorySlug: string): Promise<MenuGroup[
 
   const { data: treatments, error } = await supabase
     .from('treatments')
-    .select('id, slug, name, description, menu_group, price_cents, price_type, is_best_seller')
+    .select('id, slug, name, description, menu_group, price_cents, price_type, is_best_seller, min_options')
     .eq('category_id', category.id)
     .order('sort_order');
   if (error) throw new Error(`menu load failed: ${error.message}`);
@@ -38,7 +38,16 @@ export async function getTreatmentMenu(categorySlug: string): Promise<MenuGroup[
 
   for (const t of treatments ?? []) {
     const own = (options ?? []).filter((o) => o.treatment_id === t.id);
+    const base: MenuItem = {
+      name: t.name,
+      price: menuPrice(t.price_cents, t.price_type),
+      description: t.description ?? undefined,
+      bestSeller: t.is_best_seller,
+      book: { treatment: t.slug },
+    };
     if (own.length > 0) {
+      // Options are optional: the session itself can be booked on its own
+      if (t.min_options === 0 && t.price_cents > 0) add(t.menu_group, base);
       for (const o of own) {
         add(o.group_label, {
           name: o.name,
@@ -49,13 +58,7 @@ export async function getTreatmentMenu(categorySlug: string): Promise<MenuGroup[
       }
       continue;
     }
-    add(t.menu_group, {
-      name: t.name,
-      price: menuPrice(t.price_cents, t.price_type),
-      description: t.description ?? undefined,
-      bestSeller: t.is_best_seller,
-      book: { treatment: t.slug },
-    });
+    add(t.menu_group, base);
   }
 
   return [...groups].map(([label, items]) => ({ label: label || undefined, items }));

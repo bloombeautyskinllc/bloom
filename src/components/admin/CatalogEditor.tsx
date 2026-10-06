@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { HiChevronDown } from 'react-icons/hi';
-import { saveCategory, saveOption, saveTreatment } from '@/lib/admin/catalog-actions';
+import { deleteOption, saveCategory, saveOption, saveTreatment } from '@/lib/admin/catalog-actions';
 import { formatDuration, formatMoney } from '@/lib/booking/format';
 import { cn } from '@/lib/utils';
 import { Field, Notice, buttonClass, inputClass } from './ui';
@@ -37,6 +37,10 @@ export type CatalogTreatmentRow = {
   bufferAfterMin: number;
   /** Own deposit percentage; null follows the business default */
   depositPercent: number | null;
+  /** 0 = choosing an option is optional */
+  minOptions: number;
+  /** null = no limit */
+  maxOptions: number | null;
   isBestSeller: boolean;
   isActive: boolean;
   needsReview: boolean;
@@ -82,7 +86,11 @@ function useSaver() {
         setMessage({ tone: 'success', text: t('catalog.saved') });
         onDone?.();
         router.refresh();
-      } else setMessage({ tone: 'error', text: r.error === 'forbidden' ? t('common.forbidden') : t('common.error') });
+      } else
+        setMessage({
+          tone: 'error',
+          text: r.error === 'forbidden' ? t('common.forbidden') : r.error === 'duplicate' ? t('catalog.duplicate') : t('common.error'),
+        });
     });
   return { pending, message, save };
 }
@@ -126,18 +134,25 @@ function TreatmentForm({
     before: String(initial?.bufferBeforeMin ?? 0),
     after: String(initial?.bufferAfterMin ?? 15),
     deposit: String(initial?.depositPercent ?? depositPercent),
+    minOptions: String(initial?.minOptions ?? 0),
+    maxOptions: initial?.maxOptions?.toString() ?? '',
     isBestSeller: initial?.isBestSeller ?? false,
     isActive: initial?.isActive ?? true,
     needsReview: initial?.needsReview ?? false,
   });
   const up = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
   const id = initial?.id ?? 'new';
+  const hasOptions = (initial?.options.length ?? 0) > 0;
+  const minOptions = Number(f.minOptions || 0);
+  const maxOptions = f.maxOptions === '' ? null : Number(f.maxOptions);
+  const rangeInvalid = maxOptions !== null && maxOptions < minOptions;
 
   return (
     <form
       className="grid gap-3 rounded-xl bg-sand/60 p-4 sm:grid-cols-2 lg:grid-cols-4"
       onSubmit={(e) => {
         e.preventDefault();
+        if (rangeInvalid) return;
         save(
           () =>
             saveTreatment({
@@ -155,6 +170,8 @@ function TreatmentForm({
               bufferAfterMin: Number(f.after || 0),
               // Same as the business default = follow it (so changing Settings updates this treatment)
               depositPercent: f.deposit === '' || Number(f.deposit) === depositPercent ? null : Number(f.deposit),
+              minOptions,
+              maxOptions,
               isBestSeller: f.isBestSeller,
               isActive: f.isActive,
               needsReview: f.needsReview,
@@ -197,11 +214,29 @@ function TreatmentForm({
       <Field label={t('bufferAfter')} htmlFor={`${id}-ba`}>
         <input id={`${id}-ba`} type="number" min={0} max={240} step={5} value={f.after} onChange={up('after')} className={inputClass} />
       </Field>
+      {hasOptions && (
+        <>
+          <Field
+            label={t('minOptions')}
+            htmlFor={`${id}-minopt`}
+            hint={minOptions === 0 && cents(f.price) === 0 ? <span className="text-red-800">{t('optionsFreeWarning')}</span> : t('minOptionsHint')}
+          >
+            <input id={`${id}-minopt`} type="number" min={0} max={50} step={1} value={f.minOptions} onChange={up('minOptions')} className={inputClass} />
+          </Field>
+          <Field
+            label={t('maxOptions')}
+            htmlFor={`${id}-maxopt`}
+            hint={rangeInvalid ? <span className="text-red-800">{t('optionsRangeInvalid')}</span> : t('maxOptionsHint')}
+          >
+            <input id={`${id}-maxopt`} type="number" min={1} max={50} step={1} value={f.maxOptions} onChange={up('maxOptions')} className={inputClass} />
+          </Field>
+        </>
+      )}
       <div className="flex flex-wrap gap-x-5 gap-y-2 sm:col-span-2 lg:col-span-4">
         <Check label={t('bestSeller')} checked={f.isBestSeller} onChange={(v) => setF({ ...f, isBestSeller: v })} />
       </div>
       <div className="flex flex-wrap items-center gap-2 sm:col-span-2 lg:col-span-4">
-        <button type="submit" disabled={pending} className={buttonClass.primary}>
+        <button type="submit" disabled={pending || rangeInvalid} className={buttonClass.primary}>
           {pending ? tc('saving') : tc('save')}
         </button>
         {message && <Notice tone={message.tone}>{message.text}</Notice>}
@@ -210,44 +245,111 @@ function TreatmentForm({
   );
 }
 
-function OptionRow({ option }: { option: CatalogOptionRow }) {
+const OPTION_GRID = 'sm:grid-cols-[1.4fr_1fr_100px_130px_90px_auto_auto]';
+
+/** Edits an existing option, or creates one under `treatmentId` when `option` is omitted */
+function OptionRow({ option, treatmentId }: { option?: CatalogOptionRow; treatmentId: string }) {
   const t = useTranslations('bo.catalog');
   const tc = useTranslations('bo.common');
+  const router = useRouter();
   const { pending, message, save } = useSaver();
-  const [f, setF] = useState({ name: option.name, group: option.groupLabel ?? '', price: dollars(option.priceCents), extra: option.extraMinutes?.toString() ?? '', active: option.isActive, review: option.needsReview });
+  const [deleting, startDelete] = useTransition();
+  const blank = { name: '', group: '', price: '', priceType: 'from' as 'fixed' | 'from', extra: '0', active: true };
+  const [f, setF] = useState(
+    option
+      ? { name: option.name, group: option.groupLabel ?? '', price: dollars(option.priceCents), priceType: option.priceType, extra: option.extraMinutes?.toString() ?? '', active: option.isActive }
+      : blank,
+  );
 
   return (
     <form
-      className="grid items-end gap-2 border-b border-stone py-2 sm:grid-cols-[1.4fr_1fr_110px_110px_auto]"
+      className={cn('grid items-center gap-2 border-b border-stone py-2', OPTION_GRID, option && !option.isActive && 'opacity-60')}
       onSubmit={(e) => {
         e.preventDefault();
-        save(() =>
-          saveOption({
-            id: option.id,
-            treatmentId: option.treatmentId,
-            slug: option.slug,
-            groupLabel: f.group,
-            name: f.name,
-            priceCents: cents(f.price),
-            priceType: option.priceType,
-            extraMinutes: f.extra === '' ? null : Number(f.extra),
-            isActive: f.active,
-            needsReview: f.review,
-          }),
+        save(
+          () =>
+            saveOption({
+              id: option?.id,
+              treatmentId,
+              slug: option?.slug ?? slugify(f.name),
+              groupLabel: f.group,
+              name: f.name,
+              priceCents: cents(f.price),
+              priceType: f.priceType,
+              extraMinutes: f.extra === '' ? null : Number(f.extra),
+              isActive: f.active,
+              needsReview: option?.needsReview ?? false,
+            }),
+          option ? undefined : () => setF(blank),
         );
       }}
     >
-      <input aria-label={t('name')} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} className={inputClass} />
-      <input aria-label={t('group')} value={f.group} onChange={(e) => setF({ ...f, group: e.target.value })} className={inputClass} />
-      <input aria-label={t('price')} type="number" min={0} step="0.01" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} className={inputClass} />
-      <input aria-label={t('extraMinutes')} type="number" min={0} max={600} step={5} value={f.extra} onChange={(e) => setF({ ...f, extra: e.target.value })} className={inputClass} />
-      <div className="flex items-center gap-3">
-        <button type="submit" disabled={pending} className={`${buttonClass.secondary} px-3 py-1.5 text-xs`}>
-          {tc('save')}
+      <input aria-label={t('name')} required placeholder={t('name')} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} className={inputClass} />
+      <input aria-label={t('group')} placeholder={t('group')} value={f.group} onChange={(e) => setF({ ...f, group: e.target.value })} className={inputClass} />
+      <input aria-label={t('price')} required placeholder={t('price')} type="number" min={0} step="0.01" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} className={inputClass} />
+      <select aria-label={t('priceType')} value={f.priceType} onChange={(e) => setF({ ...f, priceType: e.target.value as 'fixed' | 'from' })} className={inputClass}>
+        <option value="fixed">{t('fixed')}</option>
+        <option value="from">{t('fromPrice')}</option>
+      </select>
+      <input aria-label={t('extraMinutes')} required type="number" min={0} max={600} step={5} value={f.extra} onChange={(e) => setF({ ...f, extra: e.target.value })} className={inputClass} />
+      <Check label={t('optionVisible')} checked={f.active} onChange={(v) => setF({ ...f, active: v })} />
+      <div className="flex items-center gap-2">
+        <button type="submit" disabled={pending || deleting} className={`${buttonClass.secondary} px-3 py-1.5 text-xs`}>
+          {option ? tc('save') : tc('add')}
         </button>
+        {option && (
+          <button
+            type="button"
+            disabled={pending || deleting}
+            className={`${buttonClass.ghost} px-2 py-1.5 text-xs text-red-800`}
+            onClick={() => {
+              if (!window.confirm(t('deleteOptionConfirm', { name: option.name }))) return;
+              startDelete(async () => {
+                const r = await deleteOption(option.id);
+                if (r.ok) router.refresh();
+                else window.alert(r.error === 'forbidden' ? tc('forbidden') : tc('error'));
+              });
+            }}
+          >
+            {tc('delete')}
+          </button>
+        )}
         {message && <span className={cn('text-xs', message.tone === 'error' ? 'text-red-800' : 'text-emerald-800')}>{message.text}</span>}
       </div>
     </form>
+  );
+}
+
+function OptionsEditor({ treatment }: { treatment: CatalogTreatmentRow }) {
+  const t = useTranslations('bo.catalog');
+  const [adding, setAdding] = useState(false);
+  const showGrid = treatment.options.length > 0 || adding;
+  return (
+    <div>
+      <h3 className="mb-1 text-[11px] font-bold uppercase tracking-[0.3em] text-bronze">{t('options')}</h3>
+      {!showGrid && <p className="py-2 text-sm text-muted">{t('noOptions')}</p>}
+      {showGrid && (
+        <div className={cn('hidden gap-2 text-[11px] uppercase tracking-[0.1em] text-muted sm:grid', OPTION_GRID)}>
+          <span>{t('name')}</span>
+          <span>{t('group')}</span>
+          <span>{t('price')}</span>
+          <span>{t('priceType')}</span>
+          <span>{t('extraMinutes')}</span>
+          <span />
+          <span />
+        </div>
+      )}
+      {treatment.options.map((o) => (
+        <OptionRow key={o.id} option={o} treatmentId={treatment.id} />
+      ))}
+      {adding ? (
+        <OptionRow treatmentId={treatment.id} />
+      ) : (
+        <button type="button" className={`${buttonClass.ghost} mt-2`} onClick={() => setAdding(true)}>
+          + {t('addOption')}
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -317,21 +419,7 @@ export default function CatalogEditor({ categories, depositPercent }: { categori
                   {expanded && (
                     <div className="flex flex-col gap-4 px-2 pb-4 pt-2">
                       <TreatmentForm categoryId={c.id} initial={x} depositPercent={depositPercent} onDone={() => setOpen(null)} />
-                      {x.options.length > 0 && (
-                        <div>
-                          <h3 className="mb-1 text-[11px] font-bold uppercase tracking-[0.3em] text-bronze">{t('options')}</h3>
-                          <div className="hidden gap-2 text-[11px] uppercase tracking-[0.1em] text-muted sm:grid sm:grid-cols-[1.4fr_1fr_110px_110px_auto]">
-                            <span>{t('name')}</span>
-                            <span>{t('group')}</span>
-                            <span>{t('price')}</span>
-                            <span>{t('extraMinutes')}</span>
-                            <span />
-                          </div>
-                          {x.options.map((o) => (
-                            <OptionRow key={o.id} option={o} />
-                          ))}
-                        </div>
-                      )}
+                      <OptionsEditor treatment={x} />
                     </div>
                   )}
                 </li>

@@ -142,9 +142,13 @@ export function OptionsStep({
     <div>
       <StepHeading>{t('title')}</StepHeading>
       <p className="mt-2 text-sm text-muted">
-        {treatment.maxOptions === null
-          ? t('hintMin', { min: Math.max(treatment.minOptions, 0) })
-          : t('hintRange', { min: treatment.minOptions, max: treatment.maxOptions })}{' '}
+        {treatment.minOptions <= 0
+          ? treatment.maxOptions === null
+            ? t('hintOptional')
+            : t('hintUpTo', { max: treatment.maxOptions })
+          : treatment.maxOptions === null
+            ? t('hintMin', { min: treatment.minOptions })
+            : t('hintRange', { min: treatment.minOptions, max: treatment.maxOptions })}{' '}
         <span className="font-medium text-ink">{t('selected', { count: selected.length })}</span>
       </p>
       <div className="mt-6 flex flex-col gap-7">
