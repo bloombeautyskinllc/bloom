@@ -2,7 +2,7 @@ import 'server-only';
 import { createTranslator } from 'next-intl';
 import { parsePhoneNumberFromString } from 'libphonenumber-js/max';
 import { z } from 'zod';
-import { routes, site } from '@/data/site';
+import { routes } from '@/data/site';
 import BookingEmail from '@/emails/BookingEmail';
 import { logoAttachment } from '@/emails/EmailLayout';
 import StaffEmail from '@/emails/StaffEmail';
@@ -12,6 +12,7 @@ import { bookingCalendarEvent } from '@/lib/booking/calendar-event';
 import { formatDateLong, formatDuration, formatMoney, formatTime } from '@/lib/booking/format';
 import { loadBooking, staffRecipients, type BookingDetails } from '@/lib/booking/load';
 import { buildIcs } from '@/lib/calendar/ics';
+import { addressLine, getContact } from '@/lib/contact';
 import { env } from '@/lib/env';
 import { firstName } from '@/lib/format/name';
 import { sendEmail } from '@/lib/notifications/email';
@@ -19,14 +20,15 @@ import { getPublicSettings } from '@/lib/settings';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { Job } from '../types';
 
-const ADDRESS = `${site.address.line1}, ${site.address.line2}`;
+// The studio address from admin > Settings
+const businessAddress = async () => addressLine(await getContact());
 
 async function translator(locale: string) {
   const l: Locale = locales.includes(locale as Locale) ? (locale as Locale) : defaultLocale;
   return createTranslator({ locale: l, messages: await loadMessages(l), namespace: 'email' });
 }
 
-function detailRows(b: BookingDetails, t: Awaited<ReturnType<typeof translator>>, timeZone: string, withNotes: boolean): [string, string][] {
+function detailRows(b: BookingDetails, t: Awaited<ReturnType<typeof translator>>, timeZone: string, address: string, withNotes: boolean): [string, string][] {
   const treatment = b.optionNames.length ? `${b.treatmentName}\n${b.optionNames.join(', ')}` : b.treatmentName;
   const minutes = (Date.parse(b.endAt) - Date.parse(b.startAt)) / 60_000;
   const rows: [string, string][] = [
@@ -35,14 +37,14 @@ function detailRows(b: BookingDetails, t: Awaited<ReturnType<typeof translator>>
     [t('details.duration'), formatDuration(minutes)],
     [t('details.total'), `${b.isStartingPrice ? 'from ' : ''}${formatMoney(b.totalCents)}`],
     ...(b.amountPaidCents > 0 ? [[t('details.paid'), formatMoney(b.amountPaidCents)] as [string, string]] : []),
-    [t('details.where'), ADDRESS],
+    [t('details.where'), address],
     [t('details.reference'), b.code],
   ];
   if (withNotes && b.clientNotes) rows.push([t('details.notes'), b.clientNotes]);
   return rows;
 }
 
-function icsAttachment(b: BookingDetails, cancelled = false) {
+function icsAttachment(b: BookingDetails, address: string, cancelled = false) {
   const event = bookingCalendarEvent(
     {
       id: b.id,
@@ -55,6 +57,7 @@ function icsAttachment(b: BookingDetails, cancelled = false) {
       items: [{ kind: 'treatment', name: b.treatmentName }, ...b.optionNames.map((name) => ({ kind: 'option', name }))],
     },
     env.NEXT_PUBLIC_SITE_URL,
+    address,
   );
   return { filename: `bloom-${b.code}.ics`, content: buildIcs(event), contentType: `text/calendar; charset=utf-8; method=${cancelled ? 'CANCEL' : 'PUBLISH'}` };
 }
@@ -65,6 +68,7 @@ function icsAttachment(b: BookingDetails, cancelled = false) {
 const bookingPayload = z.object({ booking_id: z.uuid(), event: z.enum(['confirmed', 'rescheduled', 'cancelled']), by: z.enum(['client', 'business']).default('client') });
 
 export async function bookingEmail(job: Job) {
+  const address = await businessAddress();
   const { booking_id, event, by } = bookingPayload.parse(job.payload);
   const b = await loadBooking(booking_id);
   if (!b || b.client.gone || !b.client.email) return;
@@ -85,16 +89,16 @@ export async function bookingEmail(job: Job) {
     bookingId: b.id,
     jobId: job.id,
     idempotencyKey: `job/${job.id}`,
-    attachments: [logoAttachment, icsAttachment(b, event === 'cancelled')],
+    attachments: [logoAttachment, icsAttachment(b, address, event === 'cancelled')],
     react: (
       <BookingEmail
         siteUrl={siteUrl}
-        address={ADDRESS}
+        address={address}
         preview={t(`booking.${key}.preview`, vars)}
         heading={t(`booking.${key}.heading`, vars)}
         intro={t(`booking.${key}.intro`)}
         details={[
-          ...detailRows(b, t, timezone, event !== 'cancelled'),
+          ...detailRows(b, t, timezone, address, event !== 'cancelled'),
           ...(event === 'cancelled' && b.refundDueCents ? [[t('details.refund'), t('details.refundValue', { amount: formatMoney(b.refundDueCents) })] as [string, string]] : []),
         ]}
         footnote={event === 'cancelled' ? undefined : [b.isStartingPrice ? t('details.startingPrice') : null, t('addToCalendar')].filter(Boolean).join(' ')}
@@ -111,6 +115,7 @@ export async function bookingEmail(job: Job) {
 const reminderPayload = z.object({ booking_id: z.uuid(), start_at: z.string(), offset_min: z.number() });
 
 export async function reminderEmail(job: Job) {
+  const address = await businessAddress();
   const { booking_id, start_at } = reminderPayload.parse(job.payload);
   const b = await loadBooking(booking_id);
   // Skip if cancelled, moved (a new reminder exists for the new time), opted out or already started
@@ -137,11 +142,11 @@ export async function reminderEmail(job: Job) {
     react: (
       <BookingEmail
         siteUrl={env.NEXT_PUBLIC_SITE_URL}
-        address={ADDRESS}
+        address={address}
         preview={t('booking.reminder.preview', vars)}
         heading={t('booking.reminder.heading', vars)}
         intro={t('booking.reminder.intro')}
-        details={detailRows(b, t, timezone, false)}
+        details={detailRows(b, t, timezone, address, false)}
         cta={{ label: t('manage'), href: `${env.NEXT_PUBLIC_SITE_URL}${routes.dashboard}` }}
         footer={t('footer')}
       />
@@ -155,6 +160,7 @@ export async function reminderEmail(job: Job) {
 const reviewPayload = z.object({ booking_id: z.uuid(), start_at: z.string() });
 
 export async function reviewRequestEmail(job: Job) {
+  const address = await businessAddress();
   const { booking_id, start_at } = reviewPayload.parse(job.payload);
   const b = await loadBooking(booking_id);
   if (!b || b.client.gone || !b.client.email) return;
@@ -177,7 +183,7 @@ export async function reviewRequestEmail(job: Job) {
     react: (
       <BookingEmail
         siteUrl={env.NEXT_PUBLIC_SITE_URL}
-        address={ADDRESS}
+        address={address}
         preview={t('review.preview', vars)}
         heading={t('review.heading', vars)}
         intro={t('review.intro', vars)}
@@ -193,6 +199,7 @@ export async function reviewRequestEmail(job: Job) {
 // Staff: new / rescheduled / cancelled
 // -----------------------------------------------------------------------------
 export async function staffBookingEmail(job: Job) {
+  const address = await businessAddress();
   const { booking_id, event, by } = bookingPayload.parse(job.payload);
   const b = await loadBooking(booking_id);
   const to = await staffRecipients();
@@ -208,7 +215,7 @@ export async function staffBookingEmail(job: Job) {
     [t('admin.client'), b.client.name ?? '—'],
     [t('admin.phone'), (b.client.phone && parsePhoneNumberFromString(b.client.phone)?.formatInternational()) ?? b.client.phone ?? '—'],
     [t('admin.email'), b.client.email ?? '—'],
-    ...detailRows(b, t, timezone, true)
+    ...detailRows(b, t, timezone, address, true)
       .filter(([label]) => label !== t('details.where'))
       .map(([label, value]): [string, string] => [label === t('details.notes') ? t('admin.notes') : label, value]),
     [t('admin.payment'), t(`admin.paymentStatus.${b.paymentStatus}`)],
@@ -228,7 +235,7 @@ export async function staffBookingEmail(job: Job) {
     react: (
       <StaffEmail
         siteUrl={env.NEXT_PUBLIC_SITE_URL}
-        address={ADDRESS}
+        address={address}
         preview={t(`admin.${kind}.subject`, vars)}
         heading={t(`admin.${kind}.heading`)}
         details={details}
@@ -241,6 +248,7 @@ export async function staffBookingEmail(job: Job) {
 
 /** Staff alert when a background task gives up (e.g. Google Calendar sync failing repeatedly) */
 export async function staffTaskFailedEmail(job: Job, error: string) {
+  const address = await businessAddress();
   const to = await staffRecipients();
   if (to.length === 0) return;
   const t = await translator(defaultLocale);
@@ -255,7 +263,7 @@ export async function staffTaskFailedEmail(job: Job, error: string) {
     react: (
       <StaffEmail
         siteUrl={env.NEXT_PUBLIC_SITE_URL}
-        address={ADDRESS}
+        address={address}
         preview={t('admin.syncError.subject', { what })}
         heading={t('admin.syncError.heading')}
         intro={t('admin.syncError.intro')}

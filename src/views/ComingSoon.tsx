@@ -5,7 +5,8 @@ import Reveal from '../components/motion/Reveal';
 import SplitText from '../components/motion/SplitText';
 import GlowOrb from '../components/decor/GlowOrb';
 import Sparkles from '../components/decor/Sparkles';
-import { routes, site } from '../data/site';
+import { routes } from '../data/site';
+import { WhatsAppLink } from '../components/layout/ContactProvider';
 
 // Temporary page for routes that will be built next (booking, legal pages, intake form).
 export default function ComingSoon({ title }: { title: string }) {
@@ -36,9 +37,9 @@ export default function ComingSoon({ title }: { title: string }) {
           This page is on its way. In the meantime, message us on WhatsApp and a specialist will help you right away.
         </Reveal>
         <Reveal delay={950} className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <a href={site.whatsappUrl} target="_blank" rel="noreferrer" className="btn-dark">
+          <WhatsAppLink className="btn-dark">
             Message us on WhatsApp
-          </a>
+          </WhatsAppLink>
           <Link href={routes.home} className="btn border border-bronze/40 text-ink [--sheen:rgba(131,104,85,0.2)] hover:bg-white/50">
             Back to home
           </Link>

@@ -1,4 +1,5 @@
-// Global business info shown on the public site (footer, contact links, WhatsApp button)
+// Global business info shown on the public site. Phone, WhatsApp, email and address come from
+// admin > Settings (src/lib/contact.ts); the values here are only the fallback if those cannot be loaded.
 export const site = {
   name: 'BLOOM Beauty Skin',
   address: {
@@ -11,9 +12,9 @@ export const site = {
   email: 'bloombeautyskinllc@gmail.com',
   whatsappUrl: 'https://wa.me/13474833337',
   social: {
-    instagram: 'https://instagram.com/',
-    facebook: 'https://facebook.com/',
-    tiktok: 'https://tiktok.com/',
+    instagram: 'https://www.instagram.com/blooombspa',
+    facebook: 'https://www.facebook.com/share/1C7ZrrUAeL/',
+    tiktok: 'https://www.tiktok.com/@blooombspa',
   },
   // Same as the opening hours in the back office (Team & hours)
   hours: [

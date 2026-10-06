@@ -100,7 +100,7 @@ export async function saveSettings(input: SettingsInput): Promise<SettingsResult
     .eq('id', 1);
   if (error) return { ok: false, error: 'generic' };
 
-  // Terms and privacy publish these values; booking uses them immediately
-  for (const p of ['/admin/settings', '/terms', '/privacy', '/booking']) revalidatePath(p);
+  // Every public page shows the contact details (footer, WhatsApp buttons); terms, privacy and booking show the policies
+  revalidatePath('/', 'layout');
   return { ok: true };
 }

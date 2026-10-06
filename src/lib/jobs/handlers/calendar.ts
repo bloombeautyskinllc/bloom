@@ -1,8 +1,9 @@
 import 'server-only';
 import { z } from 'zod';
-import { routes, site } from '@/data/site';
+import { routes } from '@/data/site';
 import { logAppEvent } from '@/lib/audit/log';
 import { loadBooking, type BookingDetails } from '@/lib/booking/load';
+import { addressLine, getContact } from '@/lib/contact';
 import { env } from '@/lib/env';
 import { businessEvent, clientEvent, type BookingForCalendar } from '@/lib/google/booking-event';
 import { GoogleApiError } from '@/lib/google/calendar';
@@ -41,6 +42,7 @@ export async function calendarSync(job: Job) {
 
   const admin = createAdminClient();
   const { timezone } = await getPublicSettings();
+  const location = addressLine(await getContact());
   const { data: existing } = await admin.from('calendar_events').select('*').eq('booking_id', booking_id);
   const errors: string[] = [];
 
@@ -61,7 +63,7 @@ export async function calendarSync(job: Job) {
         const body =
           kind === 'business'
             ? businessEvent(forCalendar(booking), { adminUrl: `${env.NEXT_PUBLIC_SITE_URL}${routes.admin}?booking=${booking.code}`, timeZone: timezone })
-            : clientEvent(forCalendar(booking), { manageUrl: `${env.NEXT_PUBLIC_SITE_URL}${routes.dashboard}`, location: `${site.address.line1}, ${site.address.line2}`, timeZone: timezone });
+            : clientEvent(forCalendar(booking), { manageUrl: `${env.NEXT_PUBLIC_SITE_URL}${routes.dashboard}`, location, timeZone: timezone });
 
         let eventId = sameCredential ? row!.google_event_id! : null;
         if (eventId) {

@@ -594,3 +594,16 @@ the client page. Staff downloads are logged (`consent.downloaded`).
 allergies, areas to avoid, photo consent), the PDF, and the esthetician record: face maps (front and profile
 outlines to draw on), skin analysis, treatment record and the esthetician signature. Bookings created by staff
 have no online form; staff can upload a signed paper form to the client's documents.
+
+## 10. Contact details (2026-10-06)
+
+The phone, WhatsApp, public email and address shown on the site come from `business_settings` (admin >
+Settings), not from `src/data/site.ts`. `getContact()` (`src/lib/contact.ts`) reads them through
+`get_public_settings`, formats the phone (`+1 (347) 483-3337`) and builds the `wa.me`, `tel:` and Maps links.
+The marketing and account layouts pass the result to `SiteShell`, whose `ContactProvider` shares it with the
+footer and every WhatsApp button (`WhatsAppLink`, also usable from server components). Emails, the `.ics` file,
+Google Calendar events and the consent PDF read the same values.
+
+Empty fields are hidden (phone, email, address); WhatsApp falls back to the phone number. The values in
+`site.ts` are used only when the settings cannot be loaded. Saving settings revalidates every page
+(`revalidatePath('/', 'layout')`).

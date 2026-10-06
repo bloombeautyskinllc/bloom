@@ -2,7 +2,6 @@ import 'server-only';
 import path from 'node:path';
 import { Document, Font, Image, Page, Path, StyleSheet, Svg, Text, View, renderToBuffer } from '@react-pdf/renderer';
 import type { ReactNode } from 'react';
-import { site } from '@/data/site';
 import { LOGO_MARK_COCOA_PNG_BASE64, LOGO_MARK_SIZE } from '@/emails/assets/logo';
 import { FACE_STROKE, FACE_VIEWBOX, facePaths, type FaceView } from './face-maps';
 import {
@@ -82,6 +81,8 @@ const s = StyleSheet.create({
 
 export type ConsentPdfData = {
   bookingCode: string;
+  /** Studio phone and email from admin > Settings, for the page footer */
+  contactLine: string;
   treatmentName: string;
   appointmentLabel: string;
   formVersion: number;
@@ -197,7 +198,7 @@ function ConsentDocument(d: ConsentPdfData) {
       <Page size="LETTER" style={s.page}>
         <View style={s.footer} fixed>
           <Text>
-            BLOOM Beauty Skin · {site.phone} · {site.email} · Confidential clinical record · {d.bookingCode}
+            {['BLOOM Beauty Skin', d.contactLine, 'Confidential clinical record', d.bookingCode].filter(Boolean).join(' · ')}
           </Text>
           <Text render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
         </View>

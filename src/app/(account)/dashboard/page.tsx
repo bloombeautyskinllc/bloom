@@ -9,6 +9,7 @@ import { routes } from '@/data/site';
 import { requireOnboardedProfile } from '@/lib/auth/session';
 import { bookingCalendarEvent } from '@/lib/booking/calendar-event';
 import { googleCalendarUrl } from '@/lib/calendar/ics';
+import { addressLine, getContact } from '@/lib/contact';
 import { env } from '@/lib/env';
 import { firstName as getFirstName } from '@/lib/format/name';
 import { activeSquare } from '@/lib/payments/square';
@@ -24,7 +25,7 @@ type Policy = { cancel_cutoff_hours?: number; reschedule_cutoff_hours?: number; 
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ booked?: string; paid?: string }> }) {
   const { profile } = await requireOnboardedProfile(routes.dashboard);
-  const [t, settings, { booked, paid }] = await Promise.all([getTranslations('dashboard'), getPublicSettings(), searchParams]);
+  const [t, settings, contact, { booked, paid }] = await Promise.all([getTranslations('dashboard'), getPublicSettings(), getContact(), searchParams]);
 
   const supabase = await createClient();
   const { data: rows, error } = await supabase
@@ -64,7 +65,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       canChange: hoursLeft >= Math.max(policy.cancel_cutoff_hours ?? 0, 0),
       reschedulesLeft: hoursLeft >= (policy.reschedule_cutoff_hours ?? 0) ? Math.max((policy.max_reschedules ?? 0) - b.reschedule_count, 0) : 0,
       refundPercent: policy.cancellation_refund_percent ?? null,
-      googleCalendarUrl: googleCalendarUrl(bookingCalendarEvent(b, env.NEXT_PUBLIC_SITE_URL)),
+      googleCalendarUrl: googleCalendarUrl(bookingCalendarEvent(b, env.NEXT_PUBLIC_SITE_URL, addressLine(contact))),
       hasConsent: Boolean(b.consent),
     };
     return booking;

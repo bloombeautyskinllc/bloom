@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 import { bookingCalendarEvent } from '@/lib/booking/calendar-event';
 import { buildIcs } from '@/lib/calendar/ics';
+import { addressLine, getContact } from '@/lib/contact';
 import { env } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 
@@ -19,7 +20,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     .maybeSingle();
   if (!booking) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
-  const ics = buildIcs(bookingCalendarEvent(booking, env.NEXT_PUBLIC_SITE_URL));
+  const ics = buildIcs(bookingCalendarEvent(booking, env.NEXT_PUBLIC_SITE_URL, addressLine(await getContact())));
   return new NextResponse(ics, {
     headers: {
       'Content-Type': 'text/calendar; charset=utf-8',

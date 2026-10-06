@@ -1,4 +1,3 @@
-import { site } from '@/data/site';
 import type { CalendarEvent } from '@/lib/calendar/ics';
 
 type BookingForCalendar = {
@@ -11,8 +10,8 @@ type BookingForCalendar = {
   items: { kind: string; name: string }[];
 };
 
-/** Calendar event for a client's own booking (.ics download and "Add to Google Calendar") */
-export function bookingCalendarEvent(booking: BookingForCalendar, siteUrl: string): CalendarEvent {
+/** Calendar event for a client's own booking (.ics download and "Add to Google Calendar"); `location`: the studio address */
+export function bookingCalendarEvent(booking: BookingForCalendar, siteUrl: string, location: string): CalendarEvent {
   const treatment = booking.items.find((i) => i.kind === 'treatment')?.name ?? 'Appointment';
   const options = booking.items.filter((i) => i.kind === 'option').map((i) => i.name);
   const what = options.length > 0 ? `${treatment}: ${options.join(', ')}` : treatment;
@@ -21,7 +20,7 @@ export function bookingCalendarEvent(booking: BookingForCalendar, siteUrl: strin
     uid: `${booking.id}@bloombeautyskinllc.com`,
     title: `BLOOM Beauty Skin · ${treatment}`,
     description: `${what}\nBooking ${booking.code}\nManage your appointment: ${siteUrl}/dashboard`,
-    location: `${site.address.line1}, ${site.address.line2}`,
+    location,
     start: new Date(booking.start_at),
     end: new Date(booking.end_at),
     sequence: booking.reschedule_count,

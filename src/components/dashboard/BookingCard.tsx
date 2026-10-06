@@ -7,10 +7,10 @@ import { HiOutlineCalendar, HiOutlineDownload } from 'react-icons/hi';
 import DateTimePicker from '@/components/booking/DateTimePicker';
 import QueryProvider from '@/components/booking/QueryProvider';
 import Modal from '@/components/ui/Modal';
-import { site } from '@/data/site';
 import { cancelBooking, rescheduleBooking, startPayment } from '@/lib/booking/actions';
 import { formatDateLong, formatDuration, formatMoney, formatTime } from '@/lib/booking/format';
 import { cn } from '@/lib/utils';
+import { WhatsAppLink } from '@/components/layout/ContactProvider';
 
 export type DashboardBooking = {
   id: string;
@@ -187,9 +187,9 @@ export default function BookingCard({ booking, timeZone, maxWindowDays, upcoming
           ) : (
             <p className="w-full text-sm text-muted">
               {t('policyClosed')}{' '}
-              <a href={site.whatsappUrl} target="_blank" rel="noreferrer" className="text-ink underline decoration-taupe underline-offset-4">
+              <WhatsAppLink className="text-ink underline decoration-taupe underline-offset-4">
                 {t('actions.contact')}
-              </a>
+              </WhatsAppLink>
             </p>
           )}
           <a href={booking.googleCalendarUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm text-muted transition hover:bg-sand hover:text-ink">

@@ -9,6 +9,7 @@ import logoMark from '../../assets/images/logo-mark.png';
 import ctaSuite from '../../assets/images/cta-suite.webp';
 import { routes, site } from '../../data/site';
 import { treatmentCategories } from '../../data/treatments';
+import { useContact, WhatsAppLink } from './ContactProvider';
 
 const quickLinks = [
   { label: 'About us', href: '/#about' },
@@ -47,6 +48,7 @@ const iconClass = 'inline-block transition duration-500 hover:-translate-y-1 hov
 
 export default function Footer({ showCta = true }: { showCta?: boolean }) {
   const photoRef = useParallax<HTMLDivElement>(0.1);
+  const contact = useContact();
 
   return (
     <footer className="relative isolate overflow-hidden bg-ink">
@@ -75,10 +77,7 @@ export default function Footer({ showCta = true }: { showCta?: boolean }) {
             Book your skin consultation and leave with a clear, personalized plan for your skin.
           </Reveal>
           <Reveal delay={650} className="mt-9">
-            <a
-              href={site.whatsappUrl}
-              target="_blank"
-              rel="noreferrer"
+            <WhatsAppLink
               className="sheen group relative isolate inline-flex items-center gap-3 overflow-hidden rounded-full bg-cream py-1.5 pl-1.5 pr-6 text-ink shadow-soft transition duration-500 [--sheen:rgba(131,104,85,0.22)] hover:-translate-y-0.5 hover:bg-white"
             >
               <span className="relative grid h-9 w-9 place-items-center rounded-full bg-ink transition group-hover:scale-105">
@@ -86,7 +85,7 @@ export default function Footer({ showCta = true }: { showCta?: boolean }) {
                 <img src={logoMark.src} alt="" aria-hidden className="relative h-5 w-auto" />
               </span>
               <span className="font-serif text-xl italic">Book your skin consultation</span>
-            </a>
+            </WhatsAppLink>
           </Reveal>
         </div>
       )}
@@ -135,23 +134,33 @@ export default function Footer({ showCta = true }: { showCta?: boolean }) {
             </FooterColumn>
 
             <FooterColumn title="Get in touch" className="col-span-2 lg:col-span-1" delay={600}>
-              <li>
-                <a href={site.address.mapsUrl} target="_blank" rel="noreferrer" className={`${linkClass} leading-relaxed`}>
-                  {site.address.line1}
-                  <br />
-                  {site.address.line2}
-                </a>
-              </li>
-              <li>
-                <a href={site.phoneHref} className={linkClass}>
-                  {site.phone}
-                </a>
-              </li>
-              <li>
-                <a href={`mailto:${site.email}`} className={linkClass}>
-                  {site.email}
-                </a>
-              </li>
+              {contact.address && (
+                <li>
+                  <a href={contact.address.mapsUrl} target="_blank" rel="noreferrer" className={`${linkClass} leading-relaxed`}>
+                    {contact.address.line1}
+                    {contact.address.line2 && (
+                      <>
+                        <br />
+                        {contact.address.line2}
+                      </>
+                    )}
+                  </a>
+                </li>
+              )}
+              {contact.phone && contact.phoneHref && (
+                <li>
+                  <a href={contact.phoneHref} className={linkClass}>
+                    {contact.phone}
+                  </a>
+                </li>
+              )}
+              {contact.email && (
+                <li>
+                  <a href={`mailto:${contact.email}`} className={`${linkClass} break-all`}>
+                    {contact.email}
+                  </a>
+                </li>
+              )}
             </FooterColumn>
           </div>
 

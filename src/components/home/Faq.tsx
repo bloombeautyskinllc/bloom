@@ -8,7 +8,7 @@ import SplitText from '../motion/SplitText';
 import GlowOrb from '../decor/GlowOrb';
 import Sparkles from '../decor/Sparkles';
 import { faqs } from '../../data/faqs';
-import { site } from '../../data/site';
+import { WhatsAppLink } from '../layout/ContactProvider';
 
 const ease = 'ease-[cubic-bezier(0.22,1,0.36,1)]';
 
@@ -30,14 +30,11 @@ export default function Faq() {
           </SplitText>
           <Reveal as="p" variant="blur" delay={450} className="mt-5 max-w-[327px] text-base leading-relaxed text-muted">
             Still unsure?{' '}
-            <a
-              href={site.whatsappUrl}
-              target="_blank"
-              rel="noreferrer"
+            <WhatsAppLink
               className="underline decoration-bronze/40 underline-offset-4 transition hover:text-ink hover:decoration-ink"
             >
               Message us on WhatsApp
-            </a>{' '}
+            </WhatsAppLink>{' '}
             and a specialist will help you choose.
           </Reveal>
           <Sparkles

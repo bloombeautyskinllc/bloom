@@ -11,10 +11,11 @@ import Sparkles from '../components/decor/Sparkles';
 import ComingSoon from './ComingSoon';
 import logoMark from '../assets/images/logo-mark.png';
 import Link from 'next/link';
-import { routes, site } from '../data/site';
+import { routes } from '../data/site';
 import { treatmentCategories } from '../data/treatments';
 import type { Testimonial } from '../data/testimonials';
 import { findTreatmentPage, type MenuGroup, type MenuItem, type SplitHeading, type TreatmentPage as Page } from '../data/treatmentPages';
+import { WhatsAppLink } from '../components/layout/ContactProvider';
 
 type HeadingProps = {
   as: ElementType;
@@ -76,14 +77,11 @@ function Hero({ hero }: { hero: Page['hero'] }) {
           {hero.subtitle}
         </Reveal>
         <Reveal delay={1100} className="mt-8">
-          <a
-            href={site.whatsappUrl}
-            target="_blank"
-            rel="noreferrer"
+          <WhatsAppLink
             className="sheen relative isolate block overflow-hidden rounded-full bg-cream px-8 py-3 font-serif text-xl italic text-ink shadow-soft transition duration-500 [--sheen:rgba(131,104,85,0.22)] hover:-translate-y-0.5 hover:bg-white"
           >
             Book your skin consultation
-          </a>
+          </WhatsAppLink>
         </Reveal>
       </div>
     </section>
@@ -249,10 +247,7 @@ function Experience({ experience }: { experience: Page['experience'] }) {
             <Reveal variant="scale" delay={600} className="relative isolate flex min-h-[320px] flex-col items-center justify-center gap-[22px] text-center">
               <Flower className="absolute inset-0 -z-10 m-auto h-full max-h-[340px] w-full" />
               <p className="max-w-[190px] font-serif text-[28px] leading-tight text-ink">{experience.question}</p>
-              <a
-                href={site.whatsappUrl}
-                target="_blank"
-                rel="noreferrer"
+              <WhatsAppLink
                 className="group inline-flex items-center gap-2.5 rounded-full bg-cocoa p-[5px] pr-5 text-cream transition duration-500 hover:-translate-y-0.5 hover:bg-ink"
               >
                 <span className="relative grid h-[34px] w-[34px] place-items-center rounded-full bg-cream transition group-hover:scale-105">
@@ -260,7 +255,7 @@ function Experience({ experience }: { experience: Page['experience'] }) {
                   <img src={logoMark.src} alt="" aria-hidden className="relative h-[18px] w-auto brightness-0" />
                 </span>
                 <span className="font-serif text-lg italic">Book a consultation</span>
-              </a>
+              </WhatsAppLink>
             </Reveal>
           </div>
         </div>

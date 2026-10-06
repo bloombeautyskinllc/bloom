@@ -5,6 +5,7 @@ import { getSession } from '@/lib/auth/session';
 import { formatDateLong, formatTime } from '@/lib/booking/format';
 import { answersSchema, estheticianSchema } from '@/lib/consent/form';
 import { renderConsentPdf } from '@/lib/consent/pdf';
+import { getContact } from '@/lib/contact';
 import { getRequestContext } from '@/lib/request-context';
 import { getPublicSettings } from '@/lib/settings';
 import { createClient } from '@/lib/supabase/server';
@@ -19,7 +20,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   if (!session) return NextResponse.json({ error: 'not_authenticated' }, { status: 401 });
 
   const supabase = await createClient();
-  const [{ data: form }, { data: booking }, settings] = await Promise.all([
+  const [{ data: form }, { data: booking }, settings, contact] = await Promise.all([
     supabase
       .from('consent_forms')
       .select('id, client_id, form_version, answers, signed_name, client_signature, signed_at, esthetician, esthetician_signature, esthetician_signed_at')
@@ -27,6 +28,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       .maybeSingle(),
     supabase.from('bookings').select('code, start_at, items:booking_items(kind, name, sort_order)').eq('id', id.data).maybeSingle(),
     getPublicSettings(),
+    getContact(),
   ]);
   if (!form || !booking) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
@@ -38,6 +40,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
   const pdf = await renderConsentPdf({
     bookingCode: booking.code,
+    contactLine: [contact.phone, contact.email].filter(Boolean).join(' · '),
     treatmentName: options.length ? `${treatment} (${options.join(', ')})` : treatment,
     appointmentLabel: dateTime(booking.start_at),
     formVersion: form.form_version,

@@ -1,10 +1,11 @@
 import 'server-only';
 import { createTranslator } from 'next-intl';
 import { z } from 'zod';
-import { routes, site } from '@/data/site';
+import { routes } from '@/data/site';
 import { logoAttachment } from '@/emails/EmailLayout';
 import WelcomeEmail from '@/emails/WelcomeEmail';
 import { defaultLocale, loadMessages, locales, type Locale } from '@/i18n/config';
+import { addressLine, getContact } from '@/lib/contact';
 import { env } from '@/lib/env';
 import { firstName } from '@/lib/format/name';
 import { sendEmail } from '@/lib/notifications/email';
@@ -42,7 +43,7 @@ export async function welcomeEmail(job: Job) {
       <WelcomeEmail
         siteUrl={siteUrl}
         bookingUrl={`${siteUrl}${routes.booking}`}
-        address={`${site.address.line1}, ${site.address.line2}`}
+        address={addressLine(await getContact())}
         copy={{
           preview: t('preview'),
           heading: t('heading', { name }),

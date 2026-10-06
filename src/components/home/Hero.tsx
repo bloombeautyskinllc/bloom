@@ -12,6 +12,7 @@ import hero1280 from '../../assets/images/heroes/home-1280.webp';
 import hero1920 from '../../assets/images/heroes/home-1920.webp';
 import hero2160 from '../../assets/images/heroes/home-2160.webp';
 import { site } from '../../data/site';
+import { WhatsAppLink } from '../layout/ContactProvider';
 
 const highlights = [
   { value: site.treatmentsPerformed, label: 'treatments performed' },
@@ -61,9 +62,9 @@ export default function Hero() {
             experience, designed to bring back your skin&apos;s natural glow.
           </Reveal>
           <Reveal delay={1300} className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <a href={site.whatsappUrl} target="_blank" rel="noreferrer" className="btn-light py-2.5 font-serif text-lg font-normal italic sm:text-xl">
+            <WhatsAppLink className="btn-light py-2.5 font-serif text-lg font-normal italic sm:text-xl">
               Book your skin consultation
-            </a>
+            </WhatsAppLink>
             <Link href="/#treatments" className="btn-ghost-light py-2.5 font-serif text-lg font-normal italic sm:text-xl">
               Explore our treatments
             </Link>
@@ -75,9 +76,9 @@ export default function Hero() {
 
         {/* Turning brand seal, doubling as a booking shortcut */}
         <Reveal variant="scale" delay={1500} className="absolute bottom-16 right-10 hidden lg:block">
-          <a href={site.whatsappUrl} target="_blank" rel="noreferrer" aria-label="Book your skin consultation on WhatsApp" className="group block">
+          <WhatsAppLink aria-label="Book your skin consultation on WhatsApp" className="group block">
             <RotatingBadge className="transition duration-500 group-hover:scale-105 group-hover:bg-cream/20" />
-          </a>
+          </WhatsAppLink>
         </Reveal>
 
         {/* Scroll cue */}
