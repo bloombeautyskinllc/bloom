@@ -43,7 +43,11 @@ export function squareWebhookKeys(): string[] {
 /** Test or live mode, chosen in the back office (business_settings.payments_mode). One lookup per request. */
 export const squareMode = cache(async (): Promise<SquareEnvironment> => {
   const { data, error } = await createAdminClient().from('business_settings').select('payments_mode').eq('id', 1).single();
-  if (error) throw new Error(`payments mode lookup failed: ${error.message}`);
+  // Missing until the payments_mode migration is applied: test mode, the column's default
+  if (error) {
+    console.error('[payments] payments mode lookup failed, using sandbox', error.message);
+    return 'sandbox';
+  }
   return data.payments_mode === 'production' ? 'production' : 'sandbox';
 });
 
