@@ -11,6 +11,7 @@ import { PageHeader, Panel, StatusBadge, buttonClass } from '@/components/admin/
 import { requireStaff } from '@/lib/auth/session';
 import { formatDateLong, formatDuration, formatMoney, formatTime } from '@/lib/booking/format';
 import { answersSchema, conditionChoices, emptyEstheticianRecord, estheticianSchema, labelOf, pressureChoices } from '@/lib/consent/form';
+import { CONSENT_LINK_STATUSES, consentLinkUrl } from '@/lib/consent/link';
 import { formatPhone } from '@/lib/format/phone';
 import { getPublicSettings } from '@/lib/settings';
 import { payableNow, refreshPendingRefunds } from '@/lib/payments/links';
@@ -42,7 +43,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
   const { data: b } = await supabase.from('booking_search').select('*').eq('id', id).maybeSingle();
   if (!b) notFound();
 
-  const [{ data: notes }, { data: events }, { data: emails }, { data: money }, { data: payments }, { data: refunds }, { data: openLink }, square, { data: consent }] = await Promise.all([
+  const [{ data: notes }, { data: events }, { data: emails }, { data: money }, { data: payments }, { data: refunds }, { data: openLink }, square, { data: consent }, { data: consentLink }] = await Promise.all([
     supabase.from('booking_notes').select('id, body, created_at, author:profiles!author_id(full_name)').eq('booking_id', id).is('deleted_at', null).order('created_at'),
     supabase.from('calendar_events').select('kind, sync_status, last_error, last_synced_at').eq('booking_id', id),
     supabase.from('notifications').select('template, recipient, status, created_at').eq('booking_id', id).order('created_at'),
@@ -52,6 +53,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
     supabase.from('payment_links').select('url, amount_cents, kind').eq('booking_id', id).eq('status', 'open').maybeSingle(),
     activeSquare(),
     supabase.from('consent_forms').select('answers, signed_name, signed_at, esthetician, esthetician_signature, esthetician_signed_at').eq('booking_id', id).maybeSingle(),
+    supabase.from('consent_links').select('token, expires_at').eq('booking_id', id).gt('expires_at', new Date().toISOString()).maybeSingle(),
   ]);
   const answers = consent ? answersSchema.parse(consent.answers) : null;
   const when = (iso: string) => `${formatDateLong(iso, tz)} · ${formatTime(iso, tz)}`;
@@ -151,6 +153,11 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
               record={consent?.esthetician ? estheticianSchema.parse(consent.esthetician) : newRecord()}
               estheticianSignature={consent?.esthetician_signature ?? null}
               estheticianSignedLabel={consent?.esthetician_signed_at ? when(consent.esthetician_signed_at) : null}
+              consentLink={
+                CONSENT_LINK_STATUSES.includes(b.status!)
+                  ? { link: consentLink ? { url: consentLinkUrl(consentLink.token), expiresAt: consentLink.expires_at } : null, timeZone: tz }
+                  : null
+              }
             />
           </Panel>
 

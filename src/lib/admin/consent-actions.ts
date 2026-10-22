@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { getSession } from '@/lib/auth/session';
 import { analysisFields, estheticianSchema, recordFields } from '@/lib/consent/form';
+import { consentLinkUrl } from '@/lib/consent/link';
 import { createClient } from '@/lib/supabase/server';
 
 export type ConsentRecordResult = { ok: true } | { ok: false; error: 'forbidden' | 'not_found' | 'invalid_record' | 'generic' };
@@ -44,4 +45,28 @@ export async function saveConsentRecord(input: z.input<typeof inputSchema>): Pro
   }
   revalidatePath(`/admin/bookings/${parsed.data.bookingId}`);
   return { ok: true };
+}
+
+export type ConsentLinkResult =
+  | { ok: true; data: { url: string; expiresAt: string } }
+  | { ok: false; error: 'forbidden' | 'not_found' | 'not_signable' | 'already_signed' | 'generic' };
+
+const linkSchema = z.object({ bookingId: z.uuid() });
+
+/** Link the client opens to sign the booking's consent form without signing in (created on first use). */
+export async function getConsentLink(input: z.input<typeof linkSchema>): Promise<ConsentLinkResult> {
+  const session = await getSession();
+  if (!session || (session.profile.role !== 'staff' && session.profile.role !== 'admin')) return { ok: false, error: 'forbidden' };
+  const parsed = linkSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: 'not_found' };
+
+  const { data, error } = await (await createClient()).rpc('staff_consent_link', { p_booking_id: parsed.data.bookingId });
+  const link = data?.[0];
+  if (error || !link) {
+    if (error?.code === '42501') return { ok: false, error: 'forbidden' };
+    if (error && ['not_found', 'not_signable', 'already_signed'].includes(error.message)) return { ok: false, error: error.message as 'not_found' };
+    console.error('[admin] consent link failed', error?.message);
+    return { ok: false, error: 'generic' };
+  }
+  return { ok: true, data: { url: consentLinkUrl(link.token), expiresAt: link.expires_at } };
 }

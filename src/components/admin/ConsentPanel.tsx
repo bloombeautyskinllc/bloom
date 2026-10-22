@@ -9,6 +9,7 @@ import FaceOutline from '@/components/consent/FaceOutline';
 import { saveConsentRecord } from '@/lib/admin/consent-actions';
 import { FACE_VIEWBOX } from '@/lib/consent/face-maps';
 import { analysisFields, recordFields, type EstheticianRecord } from '@/lib/consent/form';
+import ConsentLink, { type ConsentLinkValue } from './ConsentLink';
 import { Field, Notice, buttonClass, inputClass } from './ui';
 
 export type ConsentHighlights = {
@@ -28,10 +29,12 @@ type Props = {
   record: EstheticianRecord;
   estheticianSignature: string | null;
   estheticianSignedLabel: string | null;
+  /** Unsigned form: whether a link can be sent to the client, and the current one */
+  consentLink: { link: ConsentLinkValue | null; timeZone: string } | null;
 };
 
 /** Consent status, PDF download, health flags and the esthetician part of the form. */
-export default function ConsentPanel({ bookingId, signed, highlights, record: initial, estheticianSignature, estheticianSignedLabel }: Props) {
+export default function ConsentPanel({ bookingId, signed, highlights, record: initial, estheticianSignature, estheticianSignedLabel, consentLink }: Props) {
   const t = useTranslations('bo.consent');
   const tc = useTranslations('bo.common');
   const router = useRouter();
@@ -41,7 +44,14 @@ export default function ConsentPanel({ bookingId, signed, highlights, record: in
   const [notice, setNotice] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
   const [pending, start] = useTransition();
 
-  if (!signed) return <p className="text-sm text-muted">{t('notSigned')}</p>;
+  if (!signed) {
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="text-sm text-muted">{t('notSigned')}</p>
+        {consentLink && <ConsentLink bookingId={bookingId} link={consentLink.link} timeZone={consentLink.timeZone} />}
+      </div>
+    );
+  }
 
   const setGroup = <K extends 'analysis' | 'record'>(group: K, id: string, v: string) => setRecord((r) => ({ ...r, [group]: { ...r[group], [id]: v } }));
   const face = (view: 'front' | 'profile') => (

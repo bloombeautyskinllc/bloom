@@ -32,8 +32,12 @@ type Props = {
   onChange: (next: ConsentDraft) => void;
   /** Date label of the form the answers were prefilled from (null = first visit) */
   prefilledOn: string | null;
-  /** "Back" on the first section: the previous booking step */
-  onExit: () => void;
+  /** "Back" on the first section: the previous booking step (none = no Back button there) */
+  onExit?: () => void;
+  /** Button on the last section (default: sign and choose a time) */
+  finishLabel?: string;
+  /** Disables the buttons while onDone is being handled */
+  busy?: boolean;
   /** Every section is complete and signed */
   onDone: () => void;
 };
@@ -64,7 +68,7 @@ const ERROR_KIND: Record<string, string> = {
 const pad = (n: number) => String(n).padStart(2, '0');
 const fieldId = (key: string) => `cf-${key}`;
 
-export default function ConsentStep({ value, onChange, prefilledOn, onExit, onDone }: Props) {
+export default function ConsentStep({ value, onChange, prefilledOn, onExit, finishLabel, busy, onDone }: Props) {
   const t = useTranslations('booking.consent');
   const top = useRef<HTMLDivElement>(null);
   const today = useMemo(localToday, []);
@@ -388,15 +392,17 @@ export default function ConsentStep({ value, onChange, prefilledOn, onExit, onDo
       )}
 
       <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <button
-          type="button"
-          onClick={() => (index === 0 ? onExit() : goTo(index - 1))}
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-full px-5 text-sm text-muted transition hover:bg-sand hover:text-ink"
-        >
-          <HiArrowLeft className="h-4 w-4" /> {t('back')}
-        </button>
-        <button type="button" onClick={next} className="btn-dark w-full justify-center sm:w-auto">
-          {index === consentSections.length - 1 ? t('finish') : t('next')}
+        {(index > 0 || onExit) && (
+          <button
+            type="button"
+            onClick={() => (index === 0 ? onExit?.() : goTo(index - 1))}
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-full px-5 text-sm text-muted transition hover:bg-sand hover:text-ink"
+          >
+            <HiArrowLeft className="h-4 w-4" /> {t('back')}
+          </button>
+        )}
+        <button type="button" onClick={next} disabled={busy} className="btn-dark w-full justify-center disabled:opacity-50 sm:ml-auto sm:w-auto">
+          {index === consentSections.length - 1 ? (finishLabel ?? t('finish')) : t('next')}
         </button>
       </div>
     </div>

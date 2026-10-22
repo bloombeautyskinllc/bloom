@@ -202,7 +202,7 @@
   },
   "consent": {
     "title": "Intake & consent",
-    "notSigned": "No consent form for this booking. Online bookings are signed by the client; for bookings made by staff, ask the client to sign the paper form and upload it to their documents.",
+    "notSigned": "No consent form for this booking yet. Online bookings are signed by the client while booking; for bookings made by staff, send the client the link below so they can sign it from their phone.",
     "signed": "Signed",
     "signedBy": "by {name} · {date}",
     "download": "Download PDF",
@@ -226,11 +226,19 @@
     "signAgain": "Sign again",
     "saveRecord": "Save record",
     "forms": "Consent forms",
+    "awaiting": "Waiting for the client’s signature",
+    "linkLabel": "Consent form link",
+    "linkIntro": "Send this link to the client by WhatsApp, text or email. They don’t need to sign in; it works once and expires on {date}.",
+    "createLink": "Get link to send",
+    "copyLink": "Copy link",
+    "copied": "Copied",
     "noForms": "No signed forms yet.",
     "errors": {
       "forbidden": "You don’t have permission to do this.",
       "not_found": "This consent form no longer exists.",
       "invalid_record": "Some fields are too long, or a drawing is too large. Please shorten them and try again.",
+    "not_signable": "Links can only be sent for confirmed, pending payment or completed bookings.",
+    "already_signed": "The client has already signed this form. Refresh the page to see it.",
       "generic": "Something went wrong. Please try again."
     }
   },

@@ -593,7 +593,18 @@ the client page. Staff downloads are logged (`consent.downloaded`).
 **Back office.** The booking page shows whether the form was signed, health flags (conditions, medication,
 allergies, areas to avoid, photo consent), the PDF, and the esthetician record: face maps (front and profile
 outlines to draw on), skin analysis, treatment record and the esthetician signature. Bookings created by staff
-have no online form; staff can upload a signed paper form to the client's documents.
+have no online form: staff send the client a consent link (below), or upload a signed paper form to the
+client's documents.
+
+**Consent links (2026-10-22).** For bookings made in the back office, the booking page and the client page
+(Consent forms panel, "Waiting for the client's signature") offer a link to copy and send by WhatsApp, text
+or email. `public.consent_links` holds one random 192-bit URL-safe token per booking (staff-only read);
+`staff_consent_link` returns the active link or creates one (30 days; renewed when expired) for pending
+payment, confirmed or completed bookings without a form. `/consent/[token]` needs no sign-in:
+`consent_link_booking` (anon) returns only the booking basics and the client's name, email and phone, so
+earlier health answers are never prefilled through a link; `submit_consent_link` (anon, answers validated by
+`parseSubmission` in `src/lib/consent/link-actions.ts`) saves the form and deletes the link. The page sends
+`Referrer-Policy: no-referrer` and is not indexed.
 
 ## 10. Contact details (2026-10-06)
 

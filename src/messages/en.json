@@ -415,5 +415,25 @@
     "redirecting": "Opening checkout…",
     "bookAgain": "Book again",
     "toDashboard": "Go to my appointments"
+  },
+  "consentLink": {
+    "metaTitle": "Intake & consent form",
+    "label": "Before your visit",
+    "titleLead": "Intake &",
+    "titleAccent": "consent form",
+    "intro": "Please fill in this form for your {treatment} appointment on {date}. It takes about five minutes, and you sign it at the end.",
+    "appointment": "upcoming",
+    "finish": "Sign and send",
+    "sending": "Sending…",
+    "doneTitle": "Thank you, your form is signed",
+    "doneBody": "We have received it and will review it before your appointment. You can close this page.",
+    "invalidTitle": "This link is no longer valid",
+    "invalidBody": "The form may already be signed, or the link has expired or the appointment changed. Please contact us and we will send you a new link.",
+    "errors": {
+      "invalid_link": "This link is no longer valid. Please contact us for a new one.",
+      "already_signed": "This form has already been signed. Thank you!",
+      "consent_required": "Some answers are missing. Please go back through the sections and complete the highlighted fields.",
+      "generic": "Something went wrong. Please try again."
+    }
   }
 }

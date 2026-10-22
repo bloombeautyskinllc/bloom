@@ -413,6 +413,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"consent_links": {
+                  Row: {
+                    "booking_id": string,"created_at": string,"created_by": string | null,"expires_at": string,"token": string
+                  }
+                  Insert: {
+                    "booking_id": string,"created_at"?: string,"created_by"?: string | null,"expires_at": string,"token": string
+                  }
+                  Update: {
+                    "booking_id"?: string,"created_at"?: string,"created_by"?: string | null,"expires_at"?: string,"token"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "consent_links_booking_id_fkey"
+      columns: ["booking_id"]
+isOneToOne: true
+      referencedRelation: "bookings"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "consent_links_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"google_sync_state": {
                   Row: {
                     "credential_id": string,"last_pull_at": string | null,"sync_token": string | null,"updated_at": string
@@ -872,6 +897,11 @@ isOneToOne: false
 "configure_job_worker":
 { Args: { "p_app_url": string,"p_secret": string }; Returns: undefined
                            },
+"consent_link_booking":
+{ Args: { "p_token": string }; Returns: {
+              "booking_code": string,"email": string | null,"full_name": string | null,"phone_e164": string | null,"start_at": string,"treatment": string | null
+            }[]
+                           },
 "delete_my_account":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
@@ -936,6 +966,11 @@ isOneToOne: false
 "staff_save_consent_record":
 { Args: { "p_booking_id": string,"p_record": Json,"p_signature"?: string }; Returns: undefined
                            },
+"staff_consent_link":
+{ Args: { "p_booking_id": string }; Returns: {
+              "expires_at": string,"token": string
+            }[]
+                           },
 "staff_request_refund":
 { Args: { "p_amount_cents": number,"p_booking_id": string,"p_reason"?: string }; Returns: undefined
                            },
@@ -950,6 +985,9 @@ isOneToOne: false
                            },
 "submit_booking":
 { Args: { "p_booking_id": string,"p_intake"?: Json,"p_notes"?: string,"p_pay_full"?: boolean }; Returns: Database["public"]['Enums']["booking_status"]
+                           },
+"submit_consent_link":
+{ Args: { "p_answers": Json,"p_signature": string,"p_signed_name": string,"p_token": string,"p_version": number }; Returns: undefined
                            }
           }
           Enums: {

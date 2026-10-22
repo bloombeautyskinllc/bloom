@@ -4,10 +4,12 @@ import { getTranslations } from 'next-intl/server';
 import { HiOutlineDownload } from 'react-icons/hi';
 import AuditTimeline from '@/components/admin/AuditTimeline';
 import { ClientEditor, Documents, PinButton, TagEditor } from '@/components/admin/ClientPanels';
+import ConsentLink from '@/components/admin/ConsentLink';
 import NoteForm from '@/components/admin/NoteForm';
 import { PageHeader, Panel, Stat, StatusBadge, buttonClass } from '@/components/admin/ui';
 import { requireStaff } from '@/lib/auth/session';
 import { formatDateShort, formatMoney, formatTime } from '@/lib/booking/format';
+import { consentLinkUrl } from '@/lib/consent/link';
 import { formatPhone } from '@/lib/format/phone';
 import { getPublicSettings } from '@/lib/settings';
 import { createClient } from '@/lib/supabase/server';
@@ -35,6 +37,20 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
       .eq('client_id', id)
       .order('signed_at', { ascending: false }),
   ]);
+
+  // Upcoming appointments without a signed form: staff send the client a link to sign it
+  const signedIds = new Set((consents ?? []).map((f) => f.booking_id));
+  const now = Date.now();
+  const unsigned = (bookings ?? [])
+    .filter((b) => (b.status === 'confirmed' || b.status === 'pending_payment') && Date.parse(b.start_at!) > now - 86_400_000 && !signedIds.has(b.id!))
+    .reverse();
+  const { data: links } = unsigned.length
+    ? await supabase.from('consent_links').select('booking_id, token, expires_at').in('booking_id', unsigned.map((b) => b.id!)).gt('expires_at', new Date(now).toISOString())
+    : { data: [] };
+  const linkFor = (bookingId: string) => {
+    const l = links?.find((x) => x.booking_id === bookingId);
+    return l ? { url: consentLinkUrl(l.token), expiresAt: l.expires_at } : null;
+  };
 
   const date = (iso: string) => formatDateShort(iso, tz);
 
@@ -117,6 +133,20 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
           </Panel>
 
           <Panel title={t('consent.forms')}>
+            {!c.anonymized_at && unsigned.length > 0 && (
+              <div className="mb-4 flex flex-col gap-3 rounded-xl border border-bronze/30 bg-latte/20 px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-[0.12em] text-bronze">{t('consent.awaiting')}</p>
+                {unsigned.map((b) => (
+                  <div key={b.id} className="flex flex-col gap-2 text-sm">
+                    <Link href={`/admin/bookings/${b.id}`} className="text-ink transition hover:text-bronze">
+                      {b.code} · {date(b.start_at!)} {formatTime(b.start_at!, tz)}
+                      <span className="block truncate text-xs text-muted">{b.service}</span>
+                    </Link>
+                    <ConsentLink bookingId={b.id!} link={linkFor(b.id!)} timeZone={tz} />
+                  </div>
+                ))}
+              </div>
+            )}
             {!consents?.length ? (
               <p className="text-sm text-muted">{t('consent.noForms')}</p>
             ) : (

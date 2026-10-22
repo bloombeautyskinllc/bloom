@@ -436,6 +436,11 @@ export default async function GuidePage() {
                 fotos de antes y después.
               </li>
               <li>
+                Si la cita no tiene formulario firmado (por ejemplo, una cita creada desde el back office), pulsa <Ui>Get link to send</Ui>: se crea un link y se copia solo.
+                Envíaselo a la clienta por WhatsApp, mensaje o email; lo abre en su celular, llena el formulario y firma sin iniciar sesión. El link sirve una sola vez y vence a
+                los 30 días. Si vuelves a la cita, el mismo link sigue ahí con <Ui>Copy link</Ui>.
+              </li>
+              <li>
                 <strong>Esthetician record</strong>: la parte de la esteticista. Marca las zonas en las caras de frente y perfil dibujando sobre ellas, anota el análisis de piel y el
                 registro del tratamiento (productos, reacción de la piel, cuidados en casa, próxima cita), firma y pulsa <Ui>Save record</Ui>. Todo eso se agrega al PDF.
               </li>
@@ -512,7 +517,8 @@ export default async function GuidePage() {
                 <strong>Notes</strong>: preferencias, alergias y lo que el equipo deba saber; se pueden fijar arriba.
               </li>
               <li>
-                <strong>Consent forms</strong>: los formularios firmados en línea, uno por cita, con su PDF. Indica si falta la parte de la esteticista.
+                <strong>Consent forms</strong>: los formularios firmados en línea, uno por cita, con su PDF. Indica si falta la parte de la esteticista. Arriba, en{' '}
+                <Ui>Waiting for the client’s signature</Ui>, aparecen sus próximas citas sin formulario, cada una con el link para copiar y enviárselo.
               </li>
               <li>
                 <strong>Documents</strong>: consentimientos firmados, formularios o fotos (PDF o imagen, hasta 10 MB). Son privados y cada vez que alguien los abre queda

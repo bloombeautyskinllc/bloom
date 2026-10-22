@@ -31,6 +31,7 @@ export const routes = {
   privacy: '/privacy',
   terms: '/terms',
   intakeForm: '/intake-form',
+  consentLink: (token: string) => `/consent/${token}`,
   dashboard: '/dashboard',
   admin: '/admin',
   authCallback: '/auth/callback',
